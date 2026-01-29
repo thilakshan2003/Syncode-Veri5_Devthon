@@ -40,19 +40,22 @@ export default function ActivityLog({ limit }) {
                 </div>
             )}
 
-            <div className="space-y-4">
+            <div className="space-y-0 relative">
+                {/* Timeline Line */}
+                <div className="absolute left-[29px] top-4 bottom-4 w-0.5 bg-slate-100 z-0"></div>
+
                 {displayList.map((item) => (
-                    <div key={item.id} className="flex items-center gap-4 p-4 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.bg} ${item.color}`}>
-                            <item.icon className="w-5 h-5" />
+                    <div key={item.id} className="flex gap-4 p-0 mb-6 relative z-10">
+                        <div className={`w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center border-4 border-white shadow-sm ${item.bg} ${item.color}`}>
+                            <item.icon className="w-6 h-6" />
                         </div>
-                        <div className="flex-grow">
-                            <h4 className="text-sm font-bold text-slate-900">{item.title}</h4>
-                            <div className="flex items-center text-xs text-slate-400 mt-1">
-                                <Clock className="w-3 h-3 mr-1" /> {item.time}
+                        <div className="flex-grow pt-1">
+                            <div className="flex justify-between items-start">
+                                <h4 className="text-sm font-bold text-slate-800">{item.title}</h4>
+                                <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-full">{item.time}</span>
                             </div>
+                            <div className="text-xs font-bold text-slate-300 uppercase tracking-wider mt-1">{item.type}</div>
                         </div>
-                        <div className="text-xs font-bold text-slate-300 uppercase tracking-wider">{item.type}</div>
                     </div>
                 ))}
 

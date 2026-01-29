@@ -4,10 +4,10 @@ import Button from './Button';
 
 export default function Navbar() {
     const navLinks = [
-        { name: 'Health Dashboard', href: '#' },
-        { name: 'Testing', href: '#' },
-        { name: 'Consultation', href: '#' },
-        { name: 'Resources', href: '#' },
+        { name: 'Health Dashboard', href: '/dashboard' },
+        { name: 'Testing', href: '/testing' },
+        { name: 'Consultation', href: '/consultation' },
+        { name: 'Resources', href: '/resources' },
     ];
 
     return (
