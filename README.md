@@ -32,6 +32,11 @@ Then start the stack:
 ```bash
 docker compose up --build
 ```
+Seed the database (Run this once when you're setting up the project):
+
+```bash
+docker compose exec backend npx prisma db seed
+```
 
 This launches:
 
