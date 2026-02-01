@@ -17,7 +17,7 @@ model User {
   gender     String?
   age        Int?
   address    String?
-  status     UserStatus @default(UNVERIFIED)
+  status     UserStatusNew @default(UNVERIFIED)
   expiryDate DateTime?
 
   // Relations
@@ -32,7 +32,7 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
-enum UserStatus {
+enum UserStatusNew {
   VERIFIED
   UNVERIFIED
   PENDING
