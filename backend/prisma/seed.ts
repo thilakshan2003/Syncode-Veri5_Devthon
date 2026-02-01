@@ -2,7 +2,7 @@
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 import dotenv from 'dotenv';
-import { PrismaClient, UserStatus, AppointmentSlotMode, AppointmentStatus, OrderStatus, PaymentStatus, ShipmentStatus } from '../generated/prisma/client';
+import { PrismaClient, UserStatus, AppointmentSlotMode, AppointmentStatus, OrderStatus, PaymentStatus, ShipmentStatus } from '../generated/prisma/client.js';
 
 dotenv.config();
 
@@ -102,7 +102,7 @@ async function main() {
             username: 'alice_w',
             email: 'alice@example.com',
             passwordHash: 'hashed_password_placeholder',
-            status: UserStatus.active,
+            status: UserStatus.verified,
             profile: {
                 create: {
                     gender: 'Female',
@@ -119,7 +119,7 @@ async function main() {
             username: 'bob_b',
             email: 'bob@example.com',
             passwordHash: 'hashed_password_placeholder',
-            status: UserStatus.active,
+            status: UserStatus.verified,
             profile: {
                 create: {
                     gender: 'Male',
@@ -141,7 +141,7 @@ async function main() {
             username: 'dr_sarah',
             email: 'sarah@example.com',
             passwordHash: 'hashed_password_placeholder',
-            status: UserStatus.active,
+            status: UserStatus.verified,
         },
     });
 
@@ -165,7 +165,7 @@ async function main() {
             username: 'dr_john',
             email: 'john@example.com',
             passwordHash: 'hashed_password_placeholder',
-            status: UserStatus.active,
+            status: UserStatus.verified,
         },
     });
 
