@@ -1,6 +1,7 @@
 import express, { type Request, type Response } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import clinicRouter from './routers/clinicRouter.js';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
 import { serializeBigInt } from './utils/serialization.js';
@@ -10,6 +11,11 @@ const log = (msg: string) => fs.appendFileSync('DEBUG.log', `${new Date().toISOS
 log('Index.ts loading...');
 
 dotenv.config();
+
+// Fix BigInt serialization
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString();
+};
 
 const app = express();
 // Force restart
@@ -34,6 +40,8 @@ app.use('/api/auth', authRoutes);
 app.get('/health', (req: Request, res: Response) => {
     res.status(200).json({ status: 'ok', message: 'Backend is running' });
 });
+
+app.use('/clinics', clinicRouter);
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
