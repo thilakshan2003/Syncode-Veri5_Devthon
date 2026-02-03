@@ -1,7 +1,7 @@
 import express, { type Request, type Response } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import clinicRouter from './routers/clinicRouter.js';
+import clinicRouter from './routes/clinicRouter.js';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
 import { serializeBigInt } from './utils/serialization.js';
@@ -14,7 +14,7 @@ dotenv.config();
 
 // Fix BigInt serialization
 (BigInt.prototype as any).toJSON = function () {
-  return this.toString();
+    return this.toString();
 };
 
 const app = express();
@@ -24,7 +24,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors({
     //This is the frontend URL 
     // Used to set the Access-Control-Allow-Origin CORS header
-    origin: 'http://localhost:3000', 
+    origin: 'http://localhost:3000',
     credentials: true,
 }));
 app.use(express.json());

@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Mail, Lock, MoveRight, ShieldCheck, EyeOff, LockKeyhole } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 const loginSchema = z.object({
     email: z.string().email("Please enter a valid email address"),
@@ -14,11 +15,13 @@ const loginSchema = z.object({
 
 export default function LoginPage() {
     const [mounted, setMounted] = useState(false);
+    const { login, googleLogin } = useAuth();
+    const [error, setError] = useState("");
 
     const {
         register,
         handleSubmit,
-        formState: { errors },
+        formState: { errors, isSubmitting },
     } = useForm({
         resolver: zodResolver(loginSchema),
     });
@@ -28,9 +31,13 @@ export default function LoginPage() {
         setMounted(true);
     }, []);
 
-    const onSubmit = (data) => {
-        console.log(data);
-        // Handle login logic here
+    const onSubmit = async (data) => {
+        try {
+            setError("");
+            await login(data);
+        } catch (err) {
+            setError(err);
+        }
     };
 
     if (!mounted) return null;
@@ -39,7 +46,6 @@ export default function LoginPage() {
         <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-white">
             {/* Header */}
             <div className="text-center mb-10 space-y-3">
-                {/* Logo Placeholder - Assuming it exists or using text for now if not provided */}
                 <div className="flex items-center justify-center gap-2 mb-6">
                     <ShieldCheck className="w-8 h-8 text-veri5-teal" />
                     <span className="text-2xl font-bold tracking-tight text-veri5-navy">Veri5</span>
@@ -56,6 +62,11 @@ export default function LoginPage() {
 
             {/* Login Card */}
             <div className="w-full max-w-[480px] bg-white rounded-[2rem] border border-veri5-teal/30 p-8 md:p-12 shadow-[0_0_40px_-10px_rgba(40,169,158,0.1)]">
+                {error && (
+                    <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-2xl text-sm">
+                        {error}
+                    </div>
+                )}
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                     {/* Email Field */}
                     <div className="space-y-2">
@@ -98,9 +109,10 @@ export default function LoginPage() {
                     {/* Sign In Button */}
                     <button
                         type="submit"
-                        className="w-full bg-veri5-teal hover:bg-[#23968c] active:scale-[0.98] text-white font-semibold py-4 rounded-full transition-all flex items-center justify-center gap-2 group mt-4 shadow-lg shadow-veri5-teal/20"
+                        disabled={isSubmitting}
+                        className="w-full bg-veri5-teal hover:bg-[#23968c] active:scale-[0.98] text-white font-semibold py-4 rounded-full transition-all flex items-center justify-center gap-2 group mt-4 shadow-lg shadow-veri5-teal/20 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Sign In
+                        {isSubmitting ? "Signing In..." : "Sign In"}
                         <MoveRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </button>
 
@@ -120,7 +132,10 @@ export default function LoginPage() {
 
                 {/* Google Auth - Expanded Option */}
                 <div className="mt-8 pt-6 border-t border-gray-100">
-                    <button className="w-full bg-white border border-gray-200 hover:bg-gray-50 active:scale-[0.98] text-gray-700 font-medium py-3.5 rounded-full transition-all flex items-center justify-center gap-3">
+                    <button
+                        onClick={() => googleLogin()}
+                        className="w-full bg-white border border-gray-200 hover:bg-gray-50 active:scale-[0.98] text-gray-700 font-medium py-3.5 rounded-full transition-all flex items-center justify-center gap-3"
+                    >
                         <svg className="w-5 h-5" viewBox="0 0 24 24">
                             <path
                                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
