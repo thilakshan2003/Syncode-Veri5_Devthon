@@ -16,6 +16,7 @@ export const AuthContext = createContext({
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const router = useRouter();
 
     const fetchMe = useCallback(async () => {
@@ -64,6 +65,10 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const updateUser = (updatedUser) => {
+        setUser(updatedUser);
+    };
+
     const googleLogin = () => {
         // Redirect to the backend Google OAuth URL
         window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/auth/google`;
@@ -77,6 +82,7 @@ export const AuthProvider = ({ children }) => {
                 login,
                 signup,
                 logout,
+                updateUser,
                 googleLogin,
             }}
         >
