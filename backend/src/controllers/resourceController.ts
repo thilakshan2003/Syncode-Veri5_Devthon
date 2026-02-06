@@ -21,3 +21,27 @@ export const getResources = async (req: Request, res: Response) => {
         });
     }
 };
+
+/**
+ * Controller to fetch a specific resource by its ID.
+ */
+export const getArticleById = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        console.log(`[ResourceController] Fetching article by ID: ${id}`);
+
+        const resource = await ResourceService.getResourceById(id as string);
+
+        if (!resource) {
+            return res.status(404).json({ error: 'Article not found' });
+        }
+
+        res.json(resource);
+    } catch (error: any) {
+        console.error('[ResourceController] Error fetching article:', error.message);
+        res.status(500).json({
+            error: 'Failed to fetch article',
+            details: error.message
+        });
+    }
+};

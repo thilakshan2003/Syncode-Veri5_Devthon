@@ -22,5 +22,21 @@ export const ResourceService = {
         });
 
         return serializeBigInt(resources);
+    },
+
+    /**
+     * Fetches a single resource by its ID.
+     * 
+     * @param id - The ID of the resource to fetch.
+     * @returns A promise that resolves to the serialized resource or null if not found.
+     */
+    async getResourceById(id: string) {
+        const resource = await prisma.resource.findUnique({
+            where: { id }
+        });
+
+        if (!resource) return null;
+
+        return serializeBigInt(resource);
     }
 };
