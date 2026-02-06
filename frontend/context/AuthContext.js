@@ -71,10 +71,19 @@ export const AuthProvider = ({ children }) => {
 
     const googleLogin = async (tokenId) => {
         try {
-            await api.post('/api/auth/google', { tokenId });
+            console.log('🔵 [Frontend] Starting Google login');
+            console.log('🔵 [Frontend] Token ID length:', tokenId?.length);
+            console.log('🔵 [Frontend] API URL:', process.env.NEXT_PUBLIC_API_URL);
+
+            const response = await api.post('/api/auth/google', { tokenId });
+            console.log('✅ [Frontend] Google login response:', response.data);
+
             await fetchMe();
             router.push('/dashboard');
         } catch (err) {
+            console.error('❌ [Frontend] Google login error:', err);
+            console.error('❌ [Frontend] Error response:', err.response?.data);
+            console.error('❌ [Frontend] Error status:', err.response?.status);
             throw err.response?.data?.error || 'Google login failed';
         }
     };

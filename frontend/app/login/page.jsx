@@ -44,18 +44,27 @@ export default function LoginPage() {
     const handleGoogleResponse = async (response) => {
         try {
             setError("");
+            console.log('🔵 [Login Page] Google response received');
+            console.log('🔵 [Login Page] Credential length:', response.credential?.length);
             await googleLogin(response.credential);
         } catch (err) {
+            console.error('❌ [Login Page] Error:', err);
             setError(err);
         }
     };
 
     const initializeGoogle = () => {
+        console.log('🔵 [Google Init] Client ID from env:', process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
+        console.log('🔵 [Google Init] window.google available:', !!window.google);
+
         if (window.google) {
             window.google.accounts.id.initialize({
                 client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
                 callback: handleGoogleResponse,
             });
+            console.log('✅ [Google Init] Initialized successfully');
+        } else {
+            console.error('❌ [Google Init] window.google not available');
         }
     };
 

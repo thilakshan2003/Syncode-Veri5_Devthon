@@ -70,38 +70,56 @@ export class AuthService {
     }
 
     async googleLogin(tokenId: string) {
-        // Verify the token with Google
-        // If valid, get user info from payload
-        const ticket = await client.verifyIdToken({
-            idToken: tokenId,
-            audience: config.google.clientId,
-        });
-        const payload = ticket.getPayload();
+        try {
+            console.log('🔵 [AuthService] Starting Google login verification');
+            console.log('🔵 [AuthService] Client ID:', config.google.clientId);
 
-        if (!payload || !payload.email) {
-            throw new Error('Invalid Google token');
-        }
-
-        // Check if user exists in our database
-        let user = await prisma.user.findUnique({ where: { email: payload.email } });
-
-        if (!user) {
-            // Create new user from Google profile
-            // Note: We need a unique username. Using part of email + random suffix as fallback
-            const baseUsername = payload.email.split('@')[0];
-            const username = `${baseUsername}_${Math.floor(Math.random() * 10000)}`;
-
-            user = await prisma.user.create({
-                data: {
-                    username,
-                    email: payload.email,
-                    passwordHash: 'GOOGLE_AUTH_NO_PASSWORD', // Placeholder password
-                    status: 'Not_Verified', // Cuz the default user status is unverified
-                },
+            // Verify the token with Google
+            // If valid, get user info from payload
+            const ticket = await client.verifyIdToken({
+                idToken: tokenId,
+                audience: config.google.clientId,
             });
-        }
 
-        return generateTokens(user.id);
+            console.log('✅ [AuthService] Token verified successfully');
+            const payload = ticket.getPayload();
+
+            if (!payload || !payload.email) {
+                console.log('❌ [AuthService] Invalid payload - no email found');
+                throw new Error('Invalid Google token');
+            }
+
+            console.log('🔵 [AuthService] User email from Google:', payload.email);
+
+            // Check if user exists in our database
+            let user = await prisma.user.findUnique({ where: { email: payload.email } });
+
+            if (!user) {
+                console.log('🔵 [AuthService] User not found, creating new user');
+                // Create new user from Google profile
+                // Note: We need a unique username. Using part of email + random suffix as fallback
+                const baseUsername = payload.email.split('@')[0];
+                const username = `${baseUsername}_${Math.floor(Math.random() * 10000)}`;
+
+                user = await prisma.user.create({
+                    data: {
+                        username,
+                        email: payload.email,
+                        passwordHash: 'GOOGLE_AUTH_NO_PASSWORD', // Placeholder password
+                        status: 'Not_Verified', // Cuz the default user status is unverified
+                    },
+                });
+                console.log('✅ [AuthService] New user created:', user.email);
+            } else {
+                console.log('✅ [AuthService] Existing user found:', user.email);
+            }
+
+            console.log('🔵 [AuthService] Generating tokens');
+            return generateTokens(user.id);
+        } catch (error: any) {
+            console.error('❌ [AuthService] Google login failed:', error.message);
+            throw error;
+        }
     }
 }
 
