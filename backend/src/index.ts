@@ -5,6 +5,7 @@ import clinicRouter from './routes/clinicRouter.js';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import resourceRoutes from './routes/resourceRoutes.js';
 import { serializeBigInt } from './utils/serialization.js';
 import fs from 'fs';
 
@@ -40,6 +41,7 @@ app.set('json replacer', (key: string, value: any) => {
 log('Mounting auth routes at /api/auth');
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/resources', resourceRoutes);
 
 // basic health endpoint
 app.get('/health', (req: Request, res: Response) => {
