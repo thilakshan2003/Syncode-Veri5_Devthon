@@ -84,6 +84,25 @@ export const dashboardApi = {
     viewStatusShare: async (token) => {
         const response = await api.get(`/api/dashboard/view-share/${token}`);
         return response.data;
+    },
+
+    /**
+     * Get user appointments
+     * @returns {Promise} Response with appointments array
+     */
+    getUserAppointments: async () => {
+        const response = await api.get('/api/dashboard/appointments');
+        return response.data;
+    },
+
+    /**
+     * Get user activity log
+     * @param {number} limit - Maximum number of activities to return (default: 20)
+     * @returns {Promise} Response with activity log array
+     */
+    getActivityLog: async (limit = 20) => {
+        const response = await api.get(`/api/dashboard/activity-log?limit=${limit}`);
+        return response.data;
     }
 };
 

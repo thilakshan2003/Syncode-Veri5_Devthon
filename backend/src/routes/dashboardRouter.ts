@@ -5,7 +5,9 @@ import {
   getNextTest,
   createShare,
   getReceivedShares,
-  viewShare
+  viewShare,
+  getAppointments,
+  getActivityLog
 } from '../controllers/dashboardController.js';
 import { authenticate } from '../middleware/authMiddleware.js';
 
@@ -50,5 +52,17 @@ router.post('/status-share', createShare);
  * Get all received status shares (requires authentication)
  */
 router.get('/received-shares', getReceivedShares);
+
+/**
+ * GET /api/dashboard/appointments
+ * Get user appointments (requires authentication)
+ */
+router.get('/appointments', getAppointments);
+
+/**
+ * GET /api/dashboard/activity-log
+ * Get user activity log (requires authentication)
+ */
+router.get('/activity-log', getActivityLog);
 
 export default router;

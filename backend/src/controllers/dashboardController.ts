@@ -5,7 +5,9 @@ import {
   getNextTestDate,
   createStatusShare,
   getReceivedStatusShares,
-  viewStatusShare
+  viewStatusShare,
+  getUserAppointments,
+  getUserActivityLog
 } from '../services/dashboardService.js';
 
 /**
@@ -188,6 +190,65 @@ export const viewShare = async (req: Request, res: Response) => {
     res.status(400).json({
       success: false,
       error: error.message || 'Failed to view status share'
+    });
+  }
+};
+
+/**
+ * Get user appointments
+ * GET /api/dashboard/appointments
+ */
+export const getAppointments = async (req: Request, res: Response) => {
+  try {
+    // @ts-ignore - req.user is set by authenticate middleware
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const appointments = await getUserAppointments(userId.toString());
+
+    res.json({
+      success: true,
+      data: appointments
+    });
+  } catch (error: any) {
+    console.error('Error in getAppointments controller:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to fetch appointments'
+    });
+  }
+};
+
+/**
+ * Get user activity log
+ * GET /api/dashboard/activity-log
+ */
+export const getActivityLog = async (req: Request, res: Response) => {
+  try {
+    // @ts-ignore - req.user is set by authenticate middleware
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    // Get limit from query params, default to 20
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+
+    const activityLog = await getUserActivityLog(userId.toString(), limit);
+
+    res.json({
+      success: true,
+      data: activityLog
+    });
+  } catch (error: any) {
+    console.error('Error in getActivityLog controller:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to fetch activity log'
     });
   }
 };

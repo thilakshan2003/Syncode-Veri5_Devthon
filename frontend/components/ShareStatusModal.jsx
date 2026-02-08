@@ -10,7 +10,7 @@ export default function ShareStatusModal({ open, onOpenChange }) {
     const [step, setStep] = useState('search'); // search, verifying, ready
     const [searchTerm, setSearchTerm] = useState('');
     const [shareLink, setShareLink] = useState('');
-    const [expiryHours, setExpiryHours] = useState(24);
+    const [expiryHours, setExpiryHours] = useState(0.0833); // 5 minutes in hours
     const [copied, setCopied] = useState(false);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -119,10 +119,9 @@ export default function ShareStatusModal({ open, onOpenChange }) {
                                         onChange={(e) => setExpiryHours(Number(e.target.value))}
                                         className="w-full h-10 px-3 rounded-lg border-2 border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all text-sm"
                                     >
-                                        <option value={1}>1 hour</option>
-                                        <option value={6}>6 hours</option>
+                                        <option value={0.0833}>5 minutes</option>
+                                        <option value={0.5}>30 minutes</option>
                                         <option value={24}>24 hours</option>
-                                        <option value={72}>3 days</option>
                                     </select>
                                 </div>
                                 
