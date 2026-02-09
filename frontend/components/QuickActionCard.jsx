@@ -3,9 +3,9 @@ import { ArrowRight } from 'lucide-react';
 
 export default function QuickActionCard({ icon: Icon, title, description, actionText, href, color = "teal" }) {
     const colorStyles = {
-        teal: "bg-teal-50 text-veri5-teal group-hover:bg-veri5-teal group-hover:text-white",
-        blue: "bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white",
-        purple: "bg-purple-50 text-purple-600 group-hover:bg-purple-600 group-hover:text-white"
+        teal: "bg-teal-50 dark:bg-teal-500/10 text-veri5-teal group-hover:bg-veri5-teal group-hover:text-white",
+        blue: "bg-blue-50 dark:bg-blue-500/10 text-blue-600 group-hover:bg-blue-600 group-hover:text-white",
+        purple: "bg-purple-50 dark:bg-purple-500/10 text-purple-600 group-hover:bg-purple-600 group-hover:text-white"
     };
 
     return (

@@ -13,12 +13,11 @@ const categories = [
     { name: "Sexual Wellbeing", value: "SEXUAL_WELLBEING" }
 ];
 
+import { resourceApi } from '@/lib/api';
+
 async function getResources(category) {
-    const url = `http://localhost:5000/api/resources${category ? `?category=${category}` : ''}`;
     try {
-        const res = await fetch(url, { cache: 'no-store' }); // Ensure fresh data
-        if (!res.ok) throw new Error('Failed to fetch resources');
-        return res.json();
+        return await resourceApi.getResources(category);
     } catch (error) {
         console.error("Error fetching resources:", error);
         return [];
