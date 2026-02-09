@@ -70,15 +70,25 @@ export default function TestKitsPage() {
                     </div>
                 ) : (
                     <div className="grid md:grid-cols-3 gap-8 mb-24">
-                        {testKits.map((kit) => (
-                            <TestKitCard
-                                key={kit.id}
-                                title={kit.name}
-                                features={[kit.description || 'STI screening test']}
-                                price={formatPrice(kit.priceCents)}
-                                badge={kit.name === 'Full Panel' ? 'Best Value' : undefined}
-                            />
-                        ))}
+                        {testKits.map((kit, index) => {
+                            // Placeholder images for test kits
+                            const placeholderImages = [
+                                'https://images.unsplash.com/photo-1579154204601-01588f351e67?w=400&h=300&fit=crop', // Medical test kit
+                                'https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=400&h=300&fit=crop', // Lab testing
+                                'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=400&h=300&fit=crop', // Medical supplies
+                            ];
+                            
+                            return (
+                                <TestKitCard
+                                    key={kit.id}
+                                    title={kit.name}
+                                    features={[kit.description || 'STI screening test']}
+                                    price={formatPrice(kit.priceCents)}
+                                    badge={kit.name === 'Full Panel' ? 'Best Value' : undefined}
+                                    imageSrc={placeholderImages[index % placeholderImages.length]}
+                                />
+                            );
+                        })}
                     </div>
                 )}
 
