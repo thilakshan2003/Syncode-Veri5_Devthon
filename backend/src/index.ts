@@ -9,6 +9,7 @@ import orderRouter from './routes/orderRouter.js';
 import resourceRoutes from './routes/resourceRoutes.js';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
+import chatRouter from './routes/chatRouter.js';
 import { serializeBigInt } from './utils/serialization.js';
 import fs from 'fs';
 
@@ -45,6 +46,7 @@ log('Mounting auth routes at /api/auth');
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/practitioners', practitionerRouter);
+app.use('/api/chat', chatRouter);
 app.get('/health', (req: Request, res: Response) => {
     res.status(200).json({ status: 'ok', message: 'Backend is running' });
 });
