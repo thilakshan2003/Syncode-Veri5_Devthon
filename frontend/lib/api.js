@@ -106,4 +106,28 @@ export const dashboardApi = {
     }
 };
 
+// Clinic API functions
+export const clinicApi = {
+    /**
+     * Get all clinics or search by name
+     * @param {string} search - Optional search query for clinic name
+     * @returns {Promise} Response with clinics array
+     */
+    getClinics: async (search = '') => {
+        const query = search ? `?search=${encodeURIComponent(search)}` : '';
+        const response = await api.get(`/clinics${query}`);
+        return response.data;
+    },
+
+    /**
+     * Get a specific clinic by ID
+     * @param {number|string} id - Clinic ID
+     * @returns {Promise} Response with clinic data
+     */
+    getClinicById: async (id) => {
+        const response = await api.get(`/clinics/${id}`);
+        return response.data;
+    }
+};
+
 export default api;
