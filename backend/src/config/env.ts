@@ -20,6 +20,9 @@ export const config = {
     google: {
         clientId: getEnv('GOOGLE_CLIENT_ID', 'placeholder_client_id'),
     },
+    nhs: {
+        apiKey: getEnv('NHS_API_KEY', ''),
+    },
     frontendUrl: getEnv('FRONTEND_URL', 'http://localhost:3000'),
     nodeEnv: getEnv('NODE_ENV', 'development'),
 };

@@ -106,4 +106,106 @@ export const dashboardApi = {
     }
 };
 
+// Clinic API functions
+export const clinicApi = {
+    /**
+     * Get all clinics or search by name
+     * @param {string} search - Optional search query for clinic name
+     * @returns {Promise} Response with clinics array
+     */
+    getClinics: async (search = '') => {
+        const query = search ? `?search=${encodeURIComponent(search)}` : '';
+        const response = await api.get(`/clinics${query}`);
+        return response.data;
+    },
+
+    /**
+     * Get a specific clinic by ID
+     * @param {number|string} id - Clinic ID
+     * @returns {Promise} Response with clinic data
+     */
+    getClinicById: async (id) => {
+        const response = await api.get(`/clinics/${id}`);
+        return response.data;
+    },
+
+    /**
+     * Get practitioners for a clinic
+     * @param {number|string} id - Clinic ID
+     * @returns {Promise} Response with practitioners array
+     */
+    getClinicPractitioners: async (id) => {
+        const response = await api.get(`/clinics/${id}/practitioners`);
+        return response.data;
+    }
+};
+
+// Test Kit API functions
+export const testKitApi = {
+    /**
+     * Get all active test kits
+     * @returns {Promise} Response with test kits array
+     */
+    getTestKits: async () => {
+        const response = await api.get('/test-kits');
+        return response.data;
+    },
+
+    /**
+     * Get a specific test kit by ID
+     * @param {number|string} id - Test kit ID
+     * @returns {Promise} Response with test kit data
+     */
+    getTestKitById: async (id) => {
+        const response = await api.get(`/test-kits/${id}`);
+        return response.data;
+    }
+};
+
+// Practitioner API functions
+export const practitionerApi = {
+    /**
+     * Get all practitioners
+     * @returns {Promise} Response with practitioners array
+     */
+    getPractitioners: async () => {
+        const response = await api.get('/practitioners');
+        return response.data;
+    }
+};
+
+// Order API functions
+export const orderApi = {
+    /**
+     * Create a new order
+     * @param {Object} orderData - Order data
+     * @param {string} orderData.deliveryAddress - Delivery address
+     * @param {Array} orderData.items - Array of order items [{testKitId, qty, unitPriceCents}]
+     * @returns {Promise} Response with created order
+     */
+    createOrder: async (orderData) => {
+        const response = await api.post('/api/orders', orderData);
+        return response.data;
+    },
+
+    /**
+     * Get all orders for the authenticated user
+     * @returns {Promise} Response with orders array
+     */
+    getOrders: async () => {
+        const response = await api.get('/api/orders');
+        return response.data;
+    },
+
+    /**
+     * Get a specific order by ID
+     * @param {number|string} id - Order ID
+     * @returns {Promise} Response with order data
+     */
+    getOrderById: async (id) => {
+        const response = await api.get(`/api/orders/${id}`);
+        return response.data;
+    }
+};
+
 export default api;

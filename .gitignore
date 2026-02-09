@@ -1,6 +1,7 @@
 .env
-
-# Documentation files (generated)
-PRIVACY_AI_VALIDATION.md
-IMAGE_METADATA_VALIDATION.md
-METADATA_IMPLEMENTATION_SUMMARY.md
+node_modules/
+*.log
+.DS_Store
+dist/
+build/
+.next/

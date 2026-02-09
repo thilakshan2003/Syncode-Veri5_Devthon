@@ -39,12 +39,28 @@ export const login = async (req: Request, res: Response) => {
 
 export const googleCallback = async (req: Request, res: Response) => {
     try {
+        console.log('🔵 Google callback received');
+        console.log('Request body:', req.body);
+
         const { tokenId } = req.body;
+
+        if (!tokenId) {
+            console.log('❌ No tokenId provided');
+            return res.status(400).json({ error: 'Token ID is required' });
+        }
+
+        console.log('🔵 Token ID received, length:', tokenId.length);
+        console.log('🔵 Calling authService.googleLogin...');
+
         const { accessToken, refreshToken } = await authService.googleLogin(tokenId);
+
+        console.log('✅ Google login successful, setting cookies');
         setCookies(res, accessToken, refreshToken);
         res.status(200).json({ message: 'Google login successful' });
     } catch (error: any) {
-        res.status(401).json({ error: error.message });
+        console.error('❌ Google login error:', error.message);
+        console.error('Error stack:', error.stack);
+        res.status(401).json({ error: error.message || 'Google authentication failed' });
     }
 };
 
