@@ -127,6 +127,16 @@ export const clinicApi = {
     getClinicById: async (id) => {
         const response = await api.get(`/clinics/${id}`);
         return response.data;
+    },
+
+    /**
+     * Get practitioners for a clinic
+     * @param {number|string} id - Clinic ID
+     * @returns {Promise} Response with practitioners array
+     */
+    getClinicPractitioners: async (id) => {
+        const response = await api.get(`/clinics/${id}/practitioners`);
+        return response.data;
     }
 };
 
@@ -148,6 +158,18 @@ export const testKitApi = {
      */
     getTestKitById: async (id) => {
         const response = await api.get(`/test-kits/${id}`);
+        return response.data;
+    }
+};
+
+// Practitioner API functions
+export const practitionerApi = {
+    /**
+     * Get all practitioners
+     * @returns {Promise} Response with practitioners array
+     */
+    getPractitioners: async () => {
+        const response = await api.get('/practitioners');
         return response.data;
     }
 };

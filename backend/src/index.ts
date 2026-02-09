@@ -3,12 +3,12 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import clinicRouter from './routes/clinicRouter.js';
 import dashboardRouter from './routes/dashboardRouter.js';
+import practitionerRouter from './routes/practitionerRouter.js';
 import testKitRouter from './routes/testKitRouter.js';
 import orderRouter from './routes/orderRouter.js';
 import resourceRoutes from './routes/resourceRoutes.js';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
-import userRoutes from './routes/userRoutes.js';
 import { serializeBigInt } from './utils/serialization.js';
 import fs from 'fs';
 
@@ -43,8 +43,9 @@ app.set('json replacer', (key: string, value: any) => {
 // Mount auth routes
 log('Mounting auth routes at /api/auth');
 app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
 app.use('/api/dashboard', dashboardRouter);
+app.use('/practitioners', practitionerRouter);
+app.use('/api/resources', resourceRoutes);
 
 // basic health endpoint
 app.get('/health', (req: Request, res: Response) => {
