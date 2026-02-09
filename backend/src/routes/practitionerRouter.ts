@@ -4,5 +4,6 @@ import * as practitionerController from '../controllers/practitionerController.j
 const router = express.Router();
 
 router.get('/', practitionerController.getPractitioners);
+router.get('/:id', practitionerController.getPractitionerById);
 
 export default router;

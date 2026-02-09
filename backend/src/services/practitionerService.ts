@@ -75,3 +75,48 @@ export const getAllPractitioners = async () => {
         };
     });
 };
+
+export const getPractitionerById = async (id: string | number) => {
+    // Convert to BigInt safely
+    const practitionerId = BigInt(id);
+
+    const practitioner = await prisma.practitioner.findUnique({
+        where: { id: practitionerId },
+        include: {
+            user: true,
+            appointmentSlots: {
+                where: {
+                    startsAt: {
+                        gte: new Date(),
+                    },
+                    isAvailable: true, // Only fetch available slots
+                },
+                orderBy: {
+                    startsAt: 'asc',
+                },
+                include: {
+                    clinic: true
+                }
+            },
+            clinics: {
+                include: {
+                    clinic: true
+                }
+            }
+        },
+    });
+
+    if (!practitioner) return null;
+
+    return {
+        ...practitioner,
+        id: practitioner.id.toString(),
+        appointmentSlots: practitioner.appointmentSlots.map(slot => ({
+            ...slot,
+            id: slot.id.toString(),
+            practitionerId: slot.practitionerId.toString(),
+            clinicId: slot.clinicId?.toString(),
+            priceCents: slot.priceCents
+        }))
+    };
+};
