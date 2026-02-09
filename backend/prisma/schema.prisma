@@ -73,6 +73,7 @@ model Practitioner {
   regNo            String?              @map("reg_no") @db.VarChar
   rating           Float?               @default(0)
   experience       Int?                 @default(0)
+  imageUrl         String?              @map("image_url")
   createdAt        DateTime             @default(now()) @map("created_at")
   appointmentSlots AppointmentSlot[]
   clinics          PractitionerClinic[]
@@ -177,8 +178,8 @@ model Partner {
   status           PartnerStatus @default(pending)
   createdAt        DateTime      @default(now()) @map("created_at")
   acceptedAt       DateTime?     @map("accepted_at")
-  userLow          BigInt        @map("user_low")
-  userHigh         BigInt        @map("user_high")
+  userLow          BigInt?        @map("user_low")
+  userHigh         BigInt?        @map("user_high")
   receivedByUser   User          @relation("PartnerReceivedBy", fields: [receivedByUserId], references: [id], onDelete: Cascade)
   sharedByUser     User          @relation("PartnerSharedBy", fields: [sharedByUserId], references: [id], onDelete: Cascade)
 
