@@ -71,6 +71,8 @@ model Practitioner {
   name             String               @db.VarChar
   specialization   String               @db.VarChar
   regNo            String?              @map("reg_no") @db.VarChar
+  rating           Float?               @default(0)
+  experience       Int?                 @default(0)
   createdAt        DateTime             @default(now()) @map("created_at")
   appointmentSlots AppointmentSlot[]
   clinics          PractitionerClinic[]
