@@ -1,47 +1,102 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import SpecialistCard from '@/components/SpecialistCard';
 import PrivacyBanner from '@/components/PrivacyBanner';
 import { Button } from '@/components/ui/button';
-
-const specialists = [
-    {
-        name: "Dr. Sandamali Jayasinghe",
-        role: "Sexual Health Specialist",
-        experience: "12 years exp",
-        rating: "4.9 Rating",
-        verifiedLints: ["Weekdays Online Channeling", "Weekends Clinic consultations"],
-        image: "", // Placeholder or use a real image URL
-        type: "specialist"
-    },
-    {
-        name: "Dr. Chanidu Wijepala",
-        role: "Venereologist",
-        experience: "6 years exp",
-        rating: "4.6 Rating",
-        verifiedLints: ["Weekends Online Channeling", "Free consultations at NHS"],
-        image: "",
-        type: "venereologist"
-    },
-    {
-        name: "Dr. Ajay Rasiah",
-        role: "Venereologist",
-        experience: "15 years exp",
-        rating: "4.8 Rating",
-        verifiedLints: ["Daily Online Channeling"],
-        image: "",
-        type: "venereologist"
-    }
-];
+import { clinicApi, practitionerApi } from '@/lib/api';
 
 export default function ConsultationPage() {
+    const searchParams = useSearchParams();
+    const clinicId = searchParams.get('clinicId') ?? '';
     const [filter, setFilter] = useState('all'); // all, specialist, venereologist
+    const [practitioners, setPractitioners] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [clinics, setClinics] = useState([]);
+    const [selectedClinicId, setSelectedClinicId] = useState(clinicId);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const fetchClinics = async () => {
+            try {
+                const data = await clinicApi.getClinics();
+                if (isMounted) {
+                    setClinics(data || []);
+                }
+            } catch (err) {
+                if (isMounted) {
+                    setClinics([]);
+                }
+            }
+        };
+
+        fetchClinics();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    useEffect(() => {
+        setSelectedClinicId(clinicId);
+    }, [clinicId, setSelectedClinicId]);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const fetchPractitioners = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const data = selectedClinicId
+                    ? await clinicApi.getClinicPractitioners(selectedClinicId)
+                    : await practitionerApi.getPractitioners();
+
+                if (isMounted) {
+                    setPractitioners(data || []);
+                }
+            } catch (err) {
+                if (isMounted) {
+                    setError('Failed to load practitioners.');
+                }
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchPractitioners();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [selectedClinicId]);
+
+    const mappedPractitioners = useMemo(() => {
+        return practitioners.map((practitioner) => {
+            const role = practitioner.specialization || 'Practitioner';
+            const type = role.toLowerCase().includes('venereologist') ? 'venereologist' : 'specialist';
+            return {
+                id: practitioner.id,
+                name: practitioner.name,
+                role,
+                experience: practitioner.regNo ? `Reg No: ${practitioner.regNo}` : 'Experienced practitioner',
+                rating: '4.8 Rating',
+                verifiedLints: ['Clinic consultations available'],
+                image: '',
+                type
+            };
+        });
+    }, [practitioners]);
 
     const filteredSpecialists = filter === 'all'
-        ? specialists
-        : specialists.filter(s => s.type === filter);
+        ? mappedPractitioners
+        : mappedPractitioners.filter((s) => s.type === filter);
 
     return (
         <main className="min-h-screen bg-white pb-20">
@@ -58,7 +113,22 @@ export default function ConsultationPage() {
 
                 <PrivacyBanner />
 
-                <div className="flex justify-end gap-4 mb-8">
+                <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+                    <div className="flex items-center gap-3">
+                        <label className="text-sm font-semibold text-slate-700">Filter by clinic</label>
+                        <select
+                            className="h-10 rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/10"
+                            value={selectedClinicId}
+                            onChange={(event) => setSelectedClinicId(event.target.value)}
+                        >
+                            <option value="">All clinics</option>
+                            {clinics.map((clinic) => (
+                                <option key={clinic.id} value={clinic.id}>
+                                    {clinic.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                     <Button
                         variant="outline"
                         className="rounded-full border-slate-200 text-slate-700 h-10 px-6 font-bold"
@@ -74,11 +144,27 @@ export default function ConsultationPage() {
                     </Button>
                 </div>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {filteredSpecialists.map((specialist, idx) => (
-                        <SpecialistCard key={idx} {...specialist} />
-                    ))}
-                </div>
+                {loading && (
+                    <div className="text-center text-slate-500 py-12">Loading practitioners...</div>
+                )}
+
+                {!loading && error && (
+                    <div className="text-center text-red-500 py-12">{error}</div>
+                )}
+
+                {!loading && !error && filteredSpecialists.length === 0 && (
+                    <div className="text-center text-slate-500 py-12">
+                        No practitioners found.
+                    </div>
+                )}
+
+                {!loading && !error && filteredSpecialists.length > 0 && (
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {filteredSpecialists.map((specialist) => (
+                            <SpecialistCard key={specialist.id} {...specialist} />
+                        ))}
+                    </div>
+                )}
             </div>
         </main>
     );

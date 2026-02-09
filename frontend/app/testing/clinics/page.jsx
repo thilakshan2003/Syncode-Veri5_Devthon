@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import Navbar from '@/components/Navbar';
 import ClinicSearch from '@/components/ClinicSearch';
@@ -19,6 +20,7 @@ const ClinicMap = dynamic(() => import('@/components/ClinicMap'), {
 });
 
 export default function ClinicsPage() {
+    const router = useRouter();
     const [clinics, setClinics] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -136,7 +138,16 @@ export default function ClinicsPage() {
                                                 <Navigation className="w-3 h-3 mr-1" />
                                                 Directions
                                             </Button>
-                                            <Button variant="ghost" className="text-veri5-teal font-bold hover:bg-cyan-50 h-8 px-4 text-xs">Book Now</Button>
+                                            <Button
+                                                variant="ghost"
+                                                className="text-veri5-teal font-bold hover:bg-cyan-50 h-8 px-4 text-xs"
+                                                onClick={(event) => {
+                                                    event.stopPropagation();
+                                                    router.push(`/consultation?clinicId=${clinic.id}`);
+                                                }}
+                                            >
+                                                Book Now
+                                            </Button>
                                         </div>
                                     </div>
                                 );
