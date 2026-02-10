@@ -54,8 +54,8 @@ app.get('/health', (req: Request, res: Response) => {
     res.status(200).json({ status: 'ok', message: 'Backend is running' });
 });
 
-app.use('/clinics', clinicRouter);
-app.use('/test-kits', testKitRouter);
+app.use('/api/clinics', clinicRouter);
+app.use('/api/test-kits', testKitRouter);
 app.use('/api/orders', orderRouter);
 app.use('/api/resources', resourceRoutes);
 
