@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import SpecialistCard from '@/components/SpecialistCard';
 import PrivacyBanner from '@/components/PrivacyBanner';
@@ -9,8 +10,18 @@ import { Button } from '@/components/ui/button';
 
 
 export default function ConsultationPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <ConsultationContent />
+        </Suspense>
+    );
+}
+
+function ConsultationContent() {
     const searchParams = useSearchParams();
     const clinicId = searchParams.get('clinicId') ?? '';
+    const [selectedClinicId, setSelectedClinicId] = useState(clinicId);
+    const [clinics, setClinics] = useState([]); // Todo: Fetch clinics
     const [filter, setFilter] = useState('all'); // all, specialist, venereologist
     const [specialists, setSpecialists] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -46,8 +57,8 @@ export default function ConsultationPage() {
     }, []);
 
     const filteredSpecialists = filter === 'all'
-        ? mappedPractitioners
-        : mappedPractitioners.filter((s) => s.type === filter);
+        ? specialists
+        : specialists.filter((s) => s.type === filter);
 
     if (loading) {
         return <div className="text-center py-20">Loading specialists...</div>;
