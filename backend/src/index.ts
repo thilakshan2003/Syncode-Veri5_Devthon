@@ -36,7 +36,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors({
     //This is the frontend URL 
     // Used to set the Access-Control-Allow-Origin CORS header
-    origin: 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL,
     credentials: true,
 }));
 app.use(express.json());
