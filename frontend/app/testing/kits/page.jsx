@@ -22,6 +22,7 @@ export default function TestKitsPage() {
         'https://images.unsplash.com/photo-1579154204601-01588f351e67?w=400&h=300&fit=crop',
         'https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=400&h=300&fit=crop',
         'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=400&h=300&fit=crop',
+        'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=300&fit=crop',
     ];
 
     useEffect(() => {
@@ -54,14 +55,14 @@ export default function TestKitsPage() {
     };
 
     return (
-        <main className="min-h-screen bg-background pb-20">
+        <main className="min-h-screen bg-slate-950 pb-20">
             <Navbar />
 
-            <div className="container mx-auto px-4 md:px-6 py-12">
+            <div className="container mx-auto px-4 md:px-6 py-8">
 
-                <div className="text-center max-w-2xl mx-auto mb-16">
-                    <h1 className="text-4xl font-extrabold text-foreground mb-4">Available Test Kits</h1>
-                    <p className="text-muted-foreground text-lg">Select the screening that meets your needs.</p>
+                <div className="text-center max-w-2xl mx-auto mb-12">
+                    <h1 className="text-3xl font-bold text-white mb-3">Available Test Kits</h1>
+                    <p className="text-slate-400 text-base">Select the screening that meets your needs.</p>
                 </div>
 
                 {loading ? (
@@ -84,7 +85,7 @@ export default function TestKitsPage() {
                         <p className="text-slate-600">No test kits available at the moment.</p>
                     </div>
                 ) : (
-                    <div className="grid md:grid-cols-3 gap-8 mb-24">
+                    <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-8 mb-16 max-w-7xl mx-auto">
                         {testKits.map((kit, index) => {
                             const imageSrc = placeholderImages[index % placeholderImages.length];
                             
@@ -103,23 +104,24 @@ export default function TestKitsPage() {
                     </div>
                 )}
 
-                <div className="bg-gradient-to-r from-[#28a99e] to-[#208a81] rounded-3xl p-12 md:p-16 text-center shadow-2xl shadow-teal-900/20 relative overflow-hidden">
-                    {/* Decorative Circles */}
-                    <div className="absolute top-0 left-0 w-64 h-64 bg-white/5 rounded-full -translate-x-1/2 -translate-y-1/2 blur-2xl"></div>
-                    <div className="absolute bottom-0 right-0 w-64 h-64 bg-black/5 rounded-full translate-x-1/2 translate-y-1/2 blur-2xl"></div>
+                <div className="relative bg-slate-900/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 text-center border border-cyan-500/30 shadow-lg shadow-cyan-500/10 overflow-hidden max-w-3xl mx-auto">
+                    {/* Decorative Background Elements */}
+                    <div className="absolute top-0 left-0 w-48 h-48 bg-cyan-500/5 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
+                    <div className="absolute bottom-0 right-0 w-48 h-48 bg-cyan-500/5 rounded-full translate-x-1/2 translate-y-1/2 blur-3xl"></div>
 
-                    <div className="relative z-10 max-w-2xl mx-auto">
-                        <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-6">Submit your Results</h2>
-                        <p className="text-teal-50 text-lg mb-10 leading-relaxed font-medium">
-                            Take a clear image of the test kit with the QR code and submit it.
+                    <div className="relative z-10">
+                        <h2 className="text-xl md:text-2xl font-bold text-white mb-2">Submit your Results</h2>
+                        <p className="text-slate-300 text-xs md:text-sm mb-5 leading-relaxed max-w-xl mx-auto">
+                            Take a clear image of the test kit with the QR code and submit it.<br />
                             We will verify your result and update your status. No test result is stored on our server.
                         </p>
 
                         <Button
                             onClick={() => setModalOpen(true)}
-                            className="bg-white dark:bg-primary hover:bg-slate-50 dark:hover:bg-primary/90 text-veri5-navy dark:text-white font-bold rounded-full px-10 h-14 text-base shadow-xl active:scale-95 transition-all"
+                            className="bg-veri5-teal hover:bg-teal-600 text-white font-semibold rounded-lg px-6 h-11 text-sm shadow-lg shadow-teal-500/20 hover:shadow-xl hover:shadow-teal-500/30 active:scale-[0.98] transition-all duration-200 group"
                         >
-                            Submit Now <ArrowRight className="w-5 h-5 ml-2" />
+                            <span>Submit Now</span>
+                            <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                         </Button>
                     </div>
                 </div>

@@ -17,12 +17,19 @@ export const verifyTestKit = async (req: Request, res: Response) => {
     const userId = req.user.id;
 
     // Extract data from request body
-    const { serial, aiConfidence, testTypeId } = req.body;
+    const { serial, aiConfidence, testTypeId, testResult, imageMetadata } = req.body;
 
     // Validation
-    if (!serial || aiConfidence === undefined || !testTypeId) {
-      return res.status(400).json({
-        error: "Missing required fields: serial, aiConfidence, or testTypeId"
+    if (!serial || aiConfidence === undefined || !testTypeId || !testResult) {
+      return res.status(400).json({ 
+        error: "Missing required fields: serial, aiConfidence, testTypeId, or testResult" 
+      });
+    }
+
+    // Validate testResult value
+    if (!['positive', 'negative'].includes(testResult)) {
+      return res.status(400).json({ 
+        error: "Invalid testResult value. Must be 'positive' or 'negative'" 
       });
     }
 
@@ -40,6 +47,8 @@ export const verifyTestKit = async (req: Request, res: Response) => {
       serial,
       aiConfidence: confidence,
       testTypeId: BigInt(testTypeId),
+      testResult: testResult as 'positive' | 'negative',
+      imageMetadata,
     });
 
     res.json({

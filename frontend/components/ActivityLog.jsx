@@ -82,7 +82,7 @@ export default function ActivityLog({ limit }) {
         return (
             <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 text-veri5-teal animate-spin" />
-                <span className="ml-3 text-slate-500">Loading activities...</span>
+                <span className="ml-3 text-slate-500 dark:text-slate-300">Loading activities...</span>
             </div>
         );
     }
@@ -125,16 +125,16 @@ export default function ActivityLog({ limit }) {
 
                     return (
                         <div key={item.id} className="flex gap-4 p-0 mb-6 relative z-10">
-                            <div className={`w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center border-4 border-white shadow-sm ${iconConfig.bg} ${iconConfig.color}`}>
+                            <div className={`w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center border-4 border-white dark:border-slate-900 shadow-sm ${iconConfig.bg} ${iconConfig.color}`}>
                                 <IconComponent className="w-6 h-6" />
                             </div>
                             <div className="flex-grow pt-1">
                                 <div className="flex justify-between items-start gap-2">
                                     <div className="flex-grow">
-                                        <h4 className="text-sm font-bold text-slate-800">{item.title}</h4>
-                                        <p className="text-xs text-slate-500 mt-0.5">{item.description}</p>
+                                        <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">{item.title}</h4>
+                                        <p className="text-xs text-slate-500 dark:text-slate-300 mt-0.5">{item.description}</p>
                                     </div>
-                                    <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-full whitespace-nowrap">
+                                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-full whitespace-nowrap">
                                         {item.timeAgo}
                                     </span>
                                 </div>
@@ -142,7 +142,7 @@ export default function ActivityLog({ limit }) {
                                     <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full ${statusColorClass}`}>
                                         {item.status}
                                     </span>
-                                    <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+                                    <span className="text-[10px] font-bold text-slate-300 dark:text-slate-400 uppercase tracking-wider">
                                         {item.type.replace('_', ' ')}
                                     </span>
                                 </div>
@@ -152,7 +152,7 @@ export default function ActivityLog({ limit }) {
                 })}
 
                 {displayList.length === 0 && (
-                    <div className="text-center py-10 text-slate-400 text-sm">
+                    <div className="text-center py-10 text-slate-400 dark:text-slate-300 text-sm">
                         No activity found. Start by booking an appointment or ordering a test kit!
                     </div>
                 )}

@@ -254,6 +254,28 @@ export const testKitApi = {
     }
 };
 
+// Test Type API functions
+export const testTypeApi = {
+    /**
+     * Get all active test types
+     * @returns {Promise} Response with test types array
+     */
+    getTestTypes: async () => {
+        const response = await api.get('/api/test-types');
+        return response.data;
+    },
+
+    /**
+     * Get a specific test type by ID
+     * @param {number|string} id - Test type ID
+     * @returns {Promise} Response with test type data
+     */
+    getTestTypeById: async (id) => {
+        const response = await api.get(`/api/test-types/${id}`);
+        return response.data;
+    }
+};
+
 // Appointment API functions
 export const appointmentApi = {
     /**
@@ -274,6 +296,22 @@ export const appointmentApi = {
      */
     cancelAppointment: async (appointmentId) => {
         const response = await api.delete(`/api/appointments/${appointmentId}`);
+        return response.data;
+    }
+};
+
+// Verification API functions
+export const verificationApi = {
+    /**
+     * Verify test kit using serial number
+     * @param {Object} verificationData - Verification data
+     * @param {string} verificationData.serial - Test kit serial number (TK-UUID format)
+     * @param {number} verificationData.aiConfidence - AI confidence score (0-1)
+     * @param {string|number} verificationData.testTypeId - Test type ID
+     * @returns {Promise} Response with verification result
+     */
+    verifyTestKit: async (verificationData) => {
+        const response = await api.post('/api/verification/kit', verificationData);
         return response.data;
     }
 };

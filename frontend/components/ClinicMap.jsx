@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { Navigation, Clock, MapPin } from 'lucide-react';
@@ -46,6 +46,7 @@ L.Marker.prototype.options.icon = defaultIcon;
 
 export default function ClinicMap({ clinics, selectedClinic, onSelectClinic }) {
     const [mapReady, setMapReady] = useState(false);
+    const mapRef = useRef(null);
 
     // Default center (Colombo, Sri Lanka)
     const defaultCenter = [6.9271, 79.8612];
@@ -74,6 +75,12 @@ export default function ClinicMap({ clinics, selectedClinic, onSelectClinic }) {
 
     useEffect(() => {
         setMapReady(true);
+        return () => {
+            if (mapRef.current) {
+                mapRef.current.remove();
+                mapRef.current = null;
+            }
+        };
     }, []);
 
     if (!mapReady) {
@@ -90,6 +97,9 @@ export default function ClinicMap({ clinics, selectedClinic, onSelectClinic }) {
             zoom={13}
             className="w-full h-full rounded-3xl z-0"
             style={{ minHeight: '500px' }}
+            whenCreated={(map) => {
+                mapRef.current = map;
+            }}
         >
             <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

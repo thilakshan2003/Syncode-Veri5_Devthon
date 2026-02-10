@@ -27,7 +27,7 @@ export const createAppointment = async (req: Request, res: Response): Promise<vo
 
 export const cancelAppointment = async (req: Request, res: Response): Promise<void> => {
     try {
-        const appointmentId = req.params.appointmentId;
+        const appointmentId = req.params.appointmentId as string;
 
         const userId = (req as any).user?.id;
 

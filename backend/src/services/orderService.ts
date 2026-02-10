@@ -1,5 +1,6 @@
 import { prisma } from '../config/db.js';
 import { OrderStatus } from '../../generated/prisma/enums.js';
+import { randomUUID } from 'crypto';
 
 interface CreateOrderData {
   userId: bigint;
@@ -12,11 +13,11 @@ interface CreateOrderData {
 }
 
 /**
- * Create a new order with order items in a transaction
- * This ensures both the order and order items are created atomically
+ * Create a new order with order items and test kit instances in a transaction
+ * This ensures order, order items, and test kit instances are created atomically
  */
 export const createOrder = async (data: CreateOrderData) => {
-  // Use a transaction to ensure both order and order items are created together
+  // Use a transaction to ensure everything is created together
   const result = await prisma.$transaction(async (tx) => {
     // 1. Create the order
     const order = await tx.orders.create({
@@ -41,10 +42,36 @@ export const createOrder = async (data: CreateOrderData) => {
       )
     );
 
-    // 3. Return the complete order with items
+    // 3. Create test kit instances for each ordered quantity
+    // Each test kit gets a unique serial number for validation during test result upload
+    const testKitInstances: any[] = [];
+    for (const item of data.items) {
+      for (let i = 0; i < item.qty; i++) {
+        // Generate unique serial number using UUID format
+        const serialNumber = `TK-${randomUUID()}`;
+        testKitInstances.push({
+          serial_number: serialNumber,
+          test_kit_id: item.testKitId,
+          order_id: order.id,
+          user_id: data.userId,
+          // used_at and verified_at are null by default
+          // These will be set when user uploads test results
+        });
+      }
+    }
+
+    // Bulk insert test kit instances
+    if (testKitInstances.length > 0) {
+      await tx.test_kit_instances.createMany({
+        data: testKitInstances,
+      });
+    }
+
+    // 4. Return the complete order with items and created instances count
     return {
       order,
       orderItems,
+      testKitInstancesCreated: testKitInstances.length,
     };
   });
 
@@ -61,6 +88,16 @@ export const getOrdersByUserId = async (userId: bigint) => {
       items: {
         include: {
           testKit: true,
+        },
+      },
+      testKitInstances: {
+        select: {
+          id: true,
+          serial_number: true,
+          test_kit_id: true,
+          used_at: true,
+          verified_at: true,
+          created_at: true,
         },
       },
     },
@@ -83,6 +120,16 @@ export const getOrderById = async (orderId: bigint, userId: bigint) => {
       items: {
         include: {
           testKit: true,
+        },
+      },
+      testKitInstances: {
+        select: {
+          id: true,
+          serial_number: true,
+          test_kit_id: true,
+          used_at: true,
+          verified_at: true,
+          created_at: true,
         },
       },
     },

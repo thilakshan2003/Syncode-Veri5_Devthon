@@ -79,14 +79,6 @@ export default function ClinicsPage() {
                 <div className="flex flex-col lg:flex-row gap-8">
                     {/* Left: List functionality/Sidebar */}
                     <div className="w-full lg:w-1/3 space-y-4">
-                        <div className="bg-card dark:bg-card/50 border border-border dark:border-white/5 p-4 rounded-xl flex items-center justify-between mb-6">
-                            <div className="flex items-center text-sm font-medium text-foreground">
-                                <MapPin className="w-4 h-4 mr-2 text-muted-foreground" />
-                                <span className="dark:text-emerald-400">Wellawatte, Colombo</span>
-                            </div>
-                            <Button variant="ghost" size="sm" className="text-xs text-veri5-teal hover:bg-veri5-teal/10">Change</Button>
-                        </div>
-
                         <div className="space-y-4 h-[calc(100vh-400px)] overflow-y-auto pr-2">
                             {loading ? (
                                 <div className="flex items-center justify-center py-12">
