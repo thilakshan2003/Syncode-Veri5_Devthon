@@ -30,6 +30,7 @@ model User {
   currentStatus          UserCurrentStatus?
   verifications          UserVerification[] @relation("UserVerifications")
   verifiedBy             UserVerification[] @relation("VerifiedByUser")
+  testKitInstances       test_kit_instances[]
 
   @@map("users")
 }
@@ -216,6 +217,7 @@ model TestKit {
   description String?
   active      Boolean     @default(true)
   orderItems  OrderItem[]
+  testKitInstances test_kit_instances[]
 
   @@map("test_kits")
 }
@@ -230,6 +232,7 @@ model Order {
   user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   payments        Payment[]
   shipments       Shipment[]
+  testKitInstances test_kit_instances[]
 
   @@index([userId, createdAt])
   @@map("orders")
@@ -352,4 +355,22 @@ enum ResourceCategory {
   CONSENT
   MENTAL_HEALTH
   SEXUAL_WELLBEING
+}
+
+model test_kit_instances {
+  id             BigInt     @id @default(autoincrement())
+  serial_number  String     @unique @db.VarChar(100)
+  test_kit_id    BigInt
+  order_id       BigInt
+  user_id        BigInt
+  used_at        DateTime?
+  verified_at    DateTime?
+  created_at     DateTime   @default(now())
+
+  test_kit       TestKit    @relation(fields: [test_kit_id], references: [id])
+  order          Order      @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  user           User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([serial_number])
 }
