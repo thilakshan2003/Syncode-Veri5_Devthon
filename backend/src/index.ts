@@ -12,7 +12,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
 import verificationRouter from './routes/verificationRouters.js';
 
-import verificationRouter from './routes/verificationRouters.js';
+
 
 import appointmentRouter from './routes/appointmentRouter.js';
 import chatRouter from './routes/chatRouter.js';
