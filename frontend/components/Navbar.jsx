@@ -13,10 +13,10 @@ export default function Navbar() {
     const pathname = usePathname();
     
     const navLinks = [
-        { name: 'Health Dashboard', href: '/dashboard' },
-        { name: 'Testing', href: '/testing' },
-        { name: 'Consultation', href: '/consultation' },
-        { name: 'Resources', href: '/resources' },
+        { name: 'Health Dashboard', shortName: 'Dashboard', href: '/dashboard' },
+        { name: 'Testing', shortName: 'Testing', href: '/testing' },
+        { name: 'Consultation', shortName: 'Consultation', href: '/consultation' },
+        { name: 'Resources', shortName: 'Resources', href: '/resources' },
     ];
 
     const isActive = (href) => {
@@ -40,13 +40,14 @@ export default function Navbar() {
                         <Link
                             key={link.name}
                             href={link.href}
-                            className={`text-sm font-medium transition-all duration-300 ${
+                            className={`text-sm font-medium transition-all duration-300 whitespace-nowrap ${
                                 isActive(link.href)
                                     ? 'text-emerald-500 dark:text-emerald-400 font-bold'
                                     : 'text-muted-foreground hover:text-emerald-400 dark:hover:text-emerald-400 dark:hover:drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]'
                             }`}
                         >
-                            {link.name}
+                            <span className="hidden lg:inline">{link.name}</span>
+                            <span className="lg:hidden">{link.shortName}</span>
                         </Link>
                     ))}
                 </div>

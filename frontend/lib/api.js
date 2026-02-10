@@ -115,7 +115,7 @@ export const clinicApi = {
      */
     getClinics: async (search = '') => {
         const query = search ? `?search=${encodeURIComponent(search)}` : '';
-        const response = await api.get(`/clinics${query}`);
+        const response = await api.get(`/api/clinics${query}`);
         return response.data;
     },
 
@@ -125,7 +125,7 @@ export const clinicApi = {
      * @returns {Promise} Response with clinic data
      */
     getClinicById: async (id) => {
-        const response = await api.get(`/clinics/${id}`);
+        const response = await api.get(`/api/clinics/${id}`);
         return response.data;
     },
 
@@ -135,7 +135,7 @@ export const clinicApi = {
      * @returns {Promise} Response with practitioners array
      */
     getClinicPractitioners: async (id) => {
-        const response = await api.get(`/clinics/${id}/practitioners`);
+        const response = await api.get(`/api/clinics/${id}/practitioners`);
         return response.data;
     }
 };
