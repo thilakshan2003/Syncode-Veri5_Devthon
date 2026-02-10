@@ -12,6 +12,8 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
 import verificationRouter from './routes/verificationRouters.js';
 
+import verificationRouter from './routes/verificationRouters.js';
+
 import appointmentRouter from './routes/appointmentRouter.js';
 import chatRouter from './routes/chatRouter.js';
 import { serializeBigInt } from './utils/serialization.js';
@@ -52,7 +54,6 @@ app.use('/api/dashboard', dashboardRouter);
 app.use('/api/practitioners', practitionerRouter);
 app.use('/api/appointments', appointmentRouter);
 
-app.use('/practitioners', practitionerRouter);
 app.use('/api/chat', chatRouter);
 app.get('/health', (req: Request, res: Response) => {
     res.status(200).json({ status: 'ok', message: 'Backend is running' });
@@ -63,7 +64,7 @@ app.use('/api/test-kits', testKitRouter);
 app.use('/api/test-types', testTypeRouter);
 app.use('/api/orders', orderRouter);
 app.use('/api/resources', resourceRoutes);
-app.use('/api/verification', verificationRouter);
+app.use('/api/verifications', verificationRouter);
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

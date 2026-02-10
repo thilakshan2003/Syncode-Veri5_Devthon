@@ -14,7 +14,7 @@ api.interceptors.response.use(
     (error) => {
         if (error.response && error.response.status === 401) {
             // Define public paths that shouldn't trigger an automatic redirect to login
-            const publicPaths = ['/login', '/signup', '/'];
+            const publicPaths = ['/login', '/signup', '/', '/staff/login'];
             const isPublicPath = typeof window !== 'undefined' && publicPaths.includes(window.location.pathname);
 
             // Redirect to login if unauthorized and not on a public page
@@ -147,7 +147,7 @@ export const practitionerApi = {
      * @returns {Promise} Response with practitioners array
      */
     getPractitioners: async () => {
-        const response = await api.get('/practitioners');
+        const response = await api.get('/api/practitioners');
         return response.data;
     },
 
@@ -157,7 +157,7 @@ export const practitionerApi = {
      * @returns {Promise} Response with practitioner data
      */
     getPractitionerById: async (id) => {
-        const response = await api.get(`/practitioners/${id}`);
+        const response = await api.get(`/api/practitioners/${id}`);
         return response.data;
     },
 
@@ -169,7 +169,7 @@ export const practitionerApi = {
      */
     getAvailableSlots: async (practitionerId, date = '') => {
         const query = date ? `?date=${encodeURIComponent(date)}` : '';
-        const response = await api.get(`/practitioners/${practitionerId}/slots${query}`);
+        const response = await api.get(`/api/practitioners/${practitionerId}/slots${query}`);
         return response.data;
     }
 };
