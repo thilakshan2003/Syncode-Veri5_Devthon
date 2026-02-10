@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Install deps first (better caching)
 COPY backend/package*.json ./
-COPY prisma ./prisma/
+
 RUN npm ci
 
 RUN npx prisma generate
