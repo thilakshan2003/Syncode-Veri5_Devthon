@@ -12,7 +12,7 @@ export const chatWithGemini = async (messages: { role: "user" | "model", content
     try {
         log(`Initializing Gemini model...`);
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.0-flash",
+            model: "gemini-2.5-flash",
             // ... (rest of configuration)
             systemInstruction: `You are Veri5 AI, a helpful and educational healthcare assistant for the Veri5 platform. 
 
