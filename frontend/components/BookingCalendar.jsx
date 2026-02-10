@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -8,7 +8,30 @@ const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
 export default function BookingCalendar({ onDateSelect, onTimeSelect, selectedDate, selectedTime, availableSlots = [], mode = 'Online' }) {
     const today = new Date();
-    const currentMonthLabel = today.toLocaleString('default', { month: 'long', year: 'numeric' });
+    const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+    const [currentYear, setCurrentYear] = useState(today.getFullYear());
+
+    const currentMonthLabel = new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long', year: 'numeric' });
+
+    // Navigate to previous month
+    const goToPrevMonth = () => {
+        if (currentMonth === 0) {
+            setCurrentMonth(11);
+            setCurrentYear(currentYear - 1);
+        } else {
+            setCurrentMonth(currentMonth - 1);
+        }
+    };
+
+    // Navigate to next month
+    const goToNextMonth = () => {
+        if (currentMonth === 11) {
+            setCurrentMonth(0);
+            setCurrentYear(currentYear + 1);
+        } else {
+            setCurrentMonth(currentMonth + 1);
+        }
+    };
 
     // Filter slots by mode
     const filteredSlots = useMemo(() => {
@@ -30,10 +53,8 @@ export default function BookingCalendar({ onDateSelect, onTimeSelect, selectedDa
     }, [filteredSlots]);
 
     const getCalendarDays = () => {
-        const year = today.getFullYear();
-        const month = today.getMonth();
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
+        const firstDay = new Date(currentYear, currentMonth, 1);
+        const lastDay = new Date(currentYear, currentMonth + 1, 0);
 
         const daysInMonth = [];
 
@@ -42,14 +63,14 @@ export default function BookingCalendar({ onDateSelect, onTimeSelect, selectedDa
         if (startDay === -1) startDay = 6;
 
         // Previous month padding
-        const prevMonthLastDay = new Date(year, month, 0).getDate();
+        const prevMonthLastDay = new Date(currentYear, currentMonth, 0).getDate();
         for (let i = 0; i < startDay; i++) {
             daysInMonth.push({ day: prevMonthLastDay - startDay + 1 + i, month: 'prev' });
         }
 
         // Current month days
         for (let i = 1; i <= lastDay.getDate(); i++) {
-            const dateObj = new Date(year, month, i);
+            const dateObj = new Date(currentYear, currentMonth, i);
             const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             daysInMonth.push({
                 day: i,
@@ -89,12 +110,22 @@ export default function BookingCalendar({ onDateSelect, onTimeSelect, selectedDa
 
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
-                <h2 className="text-xl font-bold text-slate-900">{currentMonthLabel}</h2>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">{currentMonthLabel}</h2>
                 <div className="flex gap-2">
-                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-border">
+                    <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-8 w-8 rounded-full border-border"
+                        onClick={goToPrevMonth}
+                    >
                         <ChevronLeft className="w-4 h-4 text-muted-foreground" />
                     </Button>
-                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-border">
+                    <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-8 w-8 rounded-full border-border"
+                        onClick={goToNextMonth}
+                    >
                         <ChevronRight className="w-4 h-4 text-muted-foreground" />
                     </Button>
                 </div>
