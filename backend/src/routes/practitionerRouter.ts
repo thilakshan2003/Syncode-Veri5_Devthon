@@ -1,8 +1,10 @@
 import express from 'express';
-import { getPractitioners } from '../controllers/practitionerController.js';
+import * as practitionerController from '../controllers/practitionerController.js';
 
 const router = express.Router();
 
-router.get('/', getPractitioners);
+router.get('/', practitionerController.getPractitioners);
+router.get('/specializations', practitionerController.getSpecializations);
+router.get('/:id', practitionerController.getPractitionerById);
 
 export default router;

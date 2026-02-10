@@ -1,102 +1,91 @@
 "use client";
 
-import { useEffect, useMemo, useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import SpecialistCard from '@/components/SpecialistCard';
 import PrivacyBanner from '@/components/PrivacyBanner';
 import { Button } from '@/components/ui/button';
-import { clinicApi, practitionerApi } from '@/lib/api';
+
+
 
 export default function ConsultationPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <ConsultationContent />
+        </Suspense>
+    );
+}
+
+function ConsultationContent() {
     const searchParams = useSearchParams();
     const clinicId = searchParams.get('clinicId') ?? '';
-    const [filter, setFilter] = useState('all'); // all, specialist, venereologist
-    const [practitioners, setPractitioners] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [clinics, setClinics] = useState([]);
     const [selectedClinicId, setSelectedClinicId] = useState(clinicId);
+    const [clinics, setClinics] = useState([]);
+    const [specializations, setSpecializations] = useState([]);
+    const [filterRole, setFilterRole] = useState('all');
+    const [filterAvailability, setFilterAvailability] = useState('all');
+    const [specialists, setSpecialists] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        let isMounted = true;
-
-        const fetchClinics = async () => {
+        const fetchFilters = async () => {
             try {
-                const data = await clinicApi.getClinics();
-                if (isMounted) {
-                    setClinics(data || []);
-                }
+                const [clinicsRes, specsRes] = await Promise.all([
+                    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/clinics`),
+                    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/practitioners/specializations`)
+                ]);
+                const clinicsData = await clinicsRes.json();
+                const specsData = await specsRes.json();
+                setClinics(clinicsData);
+                setSpecializations(specsData);
             } catch (err) {
-                if (isMounted) {
-                    setClinics([]);
-                }
+                console.error("Failed to fetch filters", err);
             }
         };
-
-        fetchClinics();
-
-        return () => {
-            isMounted = false;
-        };
+        fetchFilters();
     }, []);
 
     useEffect(() => {
-        setSelectedClinicId(clinicId);
-    }, [clinicId, setSelectedClinicId]);
-
-    useEffect(() => {
-        let isMounted = true;
-
-        const fetchPractitioners = async () => {
+        const fetchSpecialists = async () => {
+            setLoading(true);
             try {
-                setLoading(true);
-                setError(null);
-                const data = selectedClinicId
-                    ? await clinicApi.getClinicPractitioners(selectedClinicId)
-                    : await practitionerApi.getPractitioners();
+                const params = new URLSearchParams();
+                if (selectedClinicId) params.append('clinicId', selectedClinicId);
+                if (filterRole !== 'all') params.append('role', filterRole);
+                if (filterAvailability !== 'all') params.append('availability', filterAvailability);
 
-                if (isMounted) {
-                    setPractitioners(data || []);
-                }
-            } catch (err) {
-                if (isMounted) {
-                    setError('Failed to load practitioners.');
-                }
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/practitioners?${params.toString()}`);
+                const data = await response.json();
+                console.log("Fetched practitioners:", data);
+
+                // Map backend data to frontend format
+                const mappedData = data.map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    role: p.specialization,
+                    experience: `${p.experience} years exp`,
+                    rating: `${p.rating} Rating`,
+                    verifiedLints: p.availabilityTags || [],
+                    image: p.imageUrl || "",
+                    type: p.specialization.toLowerCase().includes('venereologist') ? 'venereologist' : 'specialist'
+                }));
+
+                setSpecialists(mappedData);
+            } catch (error) {
+                console.error("Failed to fetch specialists:", error);
             } finally {
-                if (isMounted) {
-                    setLoading(false);
-                }
+                setLoading(false);
             }
         };
 
-        fetchPractitioners();
+        fetchSpecialists();
+    }, [selectedClinicId, filterRole, filterAvailability]);
 
-        return () => {
-            isMounted = false;
-        };
-    }, [selectedClinicId]);
 
-    const mappedPractitioners = useMemo(() => {
-        return practitioners.map((practitioner) => {
-            const role = practitioner.specialization || 'Practitioner';
-            const type = role.toLowerCase().includes('venereologist') ? 'venereologist' : 'specialist';
-            return {
-                id: practitioner.id,
-                name: practitioner.name,
-                role,
-                experience: practitioner.regNo ? `Reg No: ${practitioner.regNo}` : 'Experienced practitioner',
-                rating: '4.8 Rating',
-                verifiedLints: ['Clinic consultations available'],
-                image: '',
-                type
-            };
-        });
-    }, [practitioners]);
-
-    const filteredSpecialists = filter === 'all'
-        ? mappedPractitioners
-        : mappedPractitioners.filter((s) => s.type === filter);
+    if (loading) {
+        return <div className="text-center py-20">Loading specialists...</div>;
+    }
 
     return (
         <main className="min-h-screen bg-background pb-20">
@@ -129,42 +118,40 @@ export default function ConsultationPage() {
                             ))}
                         </select>
                     </div>
-                    <Button
-                        variant="outline"
-                        className="rounded-full border-border text-muted-foreground h-10 px-6 font-bold hover:bg-accent hover:text-foreground"
-                    // Placeholder filter logic
-                    >
-                        Filter By Role
-                    </Button>
-                    <Button
-                        variant="outline"
-                        className="rounded-full border-primary/50 text-primary bg-primary/10 h-10 px-6 font-bold hover:bg-primary/20"
-                    >
-                        Filter by Availability
-                    </Button>
+                    <div className="flex items-center gap-3">
+                        <label className="text-sm font-semibold text-slate-700">Filter By Role</label>
+                        <select
+                            className="h-10 rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/10"
+                            value={filterRole}
+                            onChange={(e) => setFilterRole(e.target.value)}
+                        >
+                            <option value="all">All Roles</option>
+                            {specializations.map((role, idx) => (
+                                <option key={idx} value={role}>{role}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <label className="text-sm font-semibold text-slate-700">Availability</label>
+                        <select
+                            className="h-10 rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/10"
+                            value={filterAvailability}
+                            onChange={(e) => setFilterAvailability(e.target.value)}
+                        >
+                            <option value="all">Any Availability</option>
+                            <option value="weekdays">Weekdays</option>
+                            <option value="weekends">Weekends</option>
+                            <option value="online">Online Only</option>
+                        </select>
+                    </div>
                 </div>
 
-                {loading && (
-                    <div className="text-center text-slate-500 py-12">Loading practitioners...</div>
-                )}
-
-                {!loading && error && (
-                    <div className="text-center text-red-500 py-12">{error}</div>
-                )}
-
-                {!loading && !error && filteredSpecialists.length === 0 && (
-                    <div className="text-center text-slate-500 py-12">
-                        No practitioners found.
-                    </div>
-                )}
-
-                {!loading && !error && filteredSpecialists.length > 0 && (
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {filteredSpecialists.map((specialist) => (
-                            <SpecialistCard key={specialist.id} {...specialist} />
-                        ))}
-                    </div>
-                )}
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {specialists.map((specialist) => (
+                        <SpecialistCard key={specialist.id} {...specialist} />
+                    ))}
+                </div>
             </div>
         </main>
     );
