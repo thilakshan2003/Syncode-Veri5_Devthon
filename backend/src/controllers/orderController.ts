@@ -64,7 +64,7 @@ export const createOrder = async (req: Request, res: Response) => {
 
     res.status(201).json({
       success: true,
-      message: 'Order placed successfully',
+      message: 'Order placed successfully. Test kit instances created for validation.',
       data: {
         orderId: result.order.id.toString(),
         status: result.order.status,
@@ -77,6 +77,7 @@ export const createOrder = async (req: Request, res: Response) => {
           unitPriceCents: item.unitPriceCents,
         })),
         totalCents,
+        testKitInstancesCreated: result.testKitInstancesCreated,
       },
     });
   } catch (error) {
@@ -114,6 +115,14 @@ export const getOrders = async (req: Request, res: Response) => {
           qty: item.qty,
           unitPriceCents: item.unitPriceCents,
         })),
+        testKitInstances: order.testKitInstances?.map(instance => ({
+          id: instance.id.toString(),
+          serialNumber: instance.serial_number,
+          testKitId: instance.test_kit_id.toString(),
+          used: !!instance.used_at,
+          verified: !!instance.verified_at,
+          createdAt: instance.created_at,
+        })) || [],
         totalCents: order.items.reduce(
           (sum, item) => sum + item.unitPriceCents * item.qty, 
           0
@@ -164,6 +173,14 @@ export const getOrder = async (req: Request, res: Response) => {
           qty: item.qty,
           unitPriceCents: item.unitPriceCents,
         })),
+        testKitInstances: order.testKitInstances?.map(instance => ({
+          id: instance.id.toString(),
+          serialNumber: instance.serial_number,
+          testKitId: instance.test_kit_id.toString(),
+          used: !!instance.used_at,
+          verified: !!instance.verified_at,
+          createdAt: instance.created_at,
+        })) || [],
         totalCents: order.items.reduce(
           (sum, item) => sum + item.unitPriceCents * item.qty, 
           0

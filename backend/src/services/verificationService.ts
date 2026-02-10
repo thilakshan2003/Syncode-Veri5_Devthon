@@ -102,48 +102,78 @@ const runAiValidation = async (imageBuffer: Buffer): Promise<number> => {
 /**
  * ✅ Verify Test Kit - Main Service
  * 
- * PRIVACY-PRESERVING ARCHITECTURE:
- * - AI runs on FRONTEND (TensorFlow.js)
- * - Backend receives ONLY: serial + confidence score
- * - NO images transmitted to backend
- * - NO medical diagnosis performed
+ * Validation Flow:
+ * 1. Validate serial number from database
+ * 2. Check image metadata (size, format, dimensions)
+ * 3. Validate AI confidence score
+ * 4. Update database with result
  * 
  * Process:
- * 1. Frontend captures image via camera
- * 2. Frontend runs AI inference locally
- * 3. Frontend sends serial + confidence to backend
- * 4. Backend validates confidence threshold
- * 5. Backend updates verification status
- * 6. Image stays on user's device ONLY
+ * 1. Validate serial number exists and belongs to user
+ * 2. Check serial hasn't been used before
+ * 3. Validate AI confidence threshold
+ * 4. Store test result (positive/negative)
+ * 5. Update used_at timestamp
+ * 6. Update user verification status
  */
 export const verifyTestKitService = async ({
   userId,
   serial,
   aiConfidence,
   testTypeId,
+  testResult,
+  imageMetadata,
 }: {
   userId: bigint;
   serial: string;
   aiConfidence: number;
   testTypeId: bigint;
+  testResult: 'positive' | 'negative';
+  imageMetadata?: {
+    size: number;
+    format: string;
+    width?: number;
+    height?: number;
+  };
 }) => {
 
   console.log('🔬 Starting test kit verification for user:', userId.toString());
+  console.log('📋 Test Result:', testResult);
+  console.log('📸 Image Metadata:', imageMetadata);
 
   // 1️⃣ Serial validation - Check test kit is valid and unused
+  console.log('Step 1: Validating serial number...');
   const kit = await validateTestKitSerial(serial, userId);
+  console.log('✅ Serial number validated');
 
-  // 2️⃣ AI confidence validation - Verify quality threshold
-  // NOTE: AI inference already happened on frontend
-  // Backend ONLY validates the confidence score
+  // 2️⃣ Image metadata validation
+  console.log('Step 2: Validating image metadata...');
+  if (imageMetadata) {
+    // Check file size (max 10MB)
+    if (imageMetadata.size > 10 * 1024 * 1024) {
+      throw new Error('Image file size exceeds 10MB limit');
+    }
+    
+    // Check format
+    const allowedFormats = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+    if (!allowedFormats.includes(imageMetadata.format)) {
+      throw new Error('Invalid file format. Only JPG, PNG, and PDF are allowed');
+    }
+    
+    console.log('✅ Image metadata validated');
+  }
+
+  // 3️⃣ AI confidence validation - Verify quality threshold
+  console.log('Step 3: Validating AI confidence...');
   const validatedConfidence = validateAiConfidence(aiConfidence);
+  console.log('✅ AI confidence validated:', validatedConfidence);
 
   console.log('✅ All validations passed! Updating database...');
 
-  // 3️⃣ Atomic DB update - Save verification results (NOT the image)
-  await prisma.$transaction(async (tx: any) => {
-    // Mark test kit instance as used
-    await tx.test_kit_instances.update({
+  // 4️⃣ Atomic DB update - Save verification results
+  const result = await prisma.$transaction(async (tx: any) => {
+    // Mark test kit instance as used with current timestamp
+    const updatedKit = await tx.test_kit_instances.update({
       where: { id: kit.id },
       data: {
         used_at: new Date(),
@@ -151,34 +181,42 @@ export const verifyTestKitService = async ({
       },
     });
 
-    // Create verification record
-    await tx.user_verifications.create({
+    // Create verification record with test result
+    const verification = await tx.UserVerification.create({
       data: {
-        user_id: userId,
-        test_kit_id: testTypeId, // testTypeId is the variable name from arguments, which we keep for compatibility
-        status: "verified",
-        tested_at: new Date(),
-        verified_at: new Date(),
-        // NOTE: No image data stored here!
-        // NOTE: No medical diagnosis stored here!
+        userId: userId,
+        testTypeId: testTypeId,
+        status: testResult === 'negative' ? "verified" : "verified",
+        testedAt: new Date(),
+        verifiedAt: new Date(),
       },
     });
 
-    // Update user current status
-    await tx.users.update({
-      where: { id: userId },
-      data: {
-        status: "Verified",
-        updated_at: new Date(),
-      },
-    });
+    // Update user current status only if test is negative (clean)
+    if (testResult === 'negative') {
+      await tx.User.update({
+        where: { id: userId },
+        data: {
+          status: "Verified",
+          updatedAt: new Date(),
+        },
+      });
+    }
+
+    return {
+      kit: updatedKit,
+      verification,
+    };
   });
 
   console.log('✅ Verification complete!');
+  console.log('📅 Used at timestamp:', result.kit.used_at);
 
   return {
     status: "verified",
+    testResult: testResult,
     confidence: validatedConfidence,
-    verifiedAt: new Date(),
+    usedAt: result.kit.used_at,
+    verifiedAt: result.kit.verified_at,
   };
 };
