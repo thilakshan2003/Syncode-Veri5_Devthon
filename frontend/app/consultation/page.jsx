@@ -1,102 +1,57 @@
 "use client";
 
-import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import SpecialistCard from '@/components/SpecialistCard';
 import PrivacyBanner from '@/components/PrivacyBanner';
 import { Button } from '@/components/ui/button';
-import { clinicApi, practitionerApi } from '@/lib/api';
+
+
 
 export default function ConsultationPage() {
     const searchParams = useSearchParams();
     const clinicId = searchParams.get('clinicId') ?? '';
     const [filter, setFilter] = useState('all'); // all, specialist, venereologist
-    const [practitioners, setPractitioners] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [clinics, setClinics] = useState([]);
-    const [selectedClinicId, setSelectedClinicId] = useState(clinicId);
+    const [specialists, setSpecialists] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        let isMounted = true;
-
-        const fetchClinics = async () => {
+        const fetchSpecialists = async () => {
             try {
-                const data = await clinicApi.getClinics();
-                if (isMounted) {
-                    setClinics(data || []);
-                }
-            } catch (err) {
-                if (isMounted) {
-                    setClinics([]);
-                }
-            }
-        };
+                const response = await fetch('http://localhost:5000/api/practitioners');
+                const data = await response.json();
+                console.log("Fetched practitioners:", data); // Debug log
 
-        fetchClinics();
+                // Map backend data to frontend format
+                const mappedData = data.map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    role: p.specialization,
+                    experience: `${p.experience} years exp`,
+                    rating: `${p.rating} Rating`,
+                    verifiedLints: p.availabilityTags || [],
+                    image: p.imageUrl || "",
+                    type: p.specialization.toLowerCase().includes('venereologist') ? 'venereologist' : 'specialist'
+                }));
 
-        return () => {
-            isMounted = false;
-        };
-    }, []);
-
-    useEffect(() => {
-        setSelectedClinicId(clinicId);
-    }, [clinicId, setSelectedClinicId]);
-
-    useEffect(() => {
-        let isMounted = true;
-
-        const fetchPractitioners = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                const data = selectedClinicId
-                    ? await clinicApi.getClinicPractitioners(selectedClinicId)
-                    : await practitionerApi.getPractitioners();
-
-                if (isMounted) {
-                    setPractitioners(data || []);
-                }
-            } catch (err) {
-                if (isMounted) {
-                    setError('Failed to load practitioners.');
-                }
+                setSpecialists(mappedData);
+            } catch (error) {
+                console.error("Failed to fetch specialists:", error);
             } finally {
-                if (isMounted) {
-                    setLoading(false);
-                }
+                setLoading(false);
             }
         };
 
-        fetchPractitioners();
-
-        return () => {
-            isMounted = false;
-        };
-    }, [selectedClinicId]);
-
-    const mappedPractitioners = useMemo(() => {
-        return practitioners.map((practitioner) => {
-            const role = practitioner.specialization || 'Practitioner';
-            const type = role.toLowerCase().includes('venereologist') ? 'venereologist' : 'specialist';
-            return {
-                id: practitioner.id,
-                name: practitioner.name,
-                role,
-                experience: practitioner.regNo ? `Reg No: ${practitioner.regNo}` : 'Experienced practitioner',
-                rating: '4.8 Rating',
-                verifiedLints: ['Clinic consultations available'],
-                image: '',
-                type
-            };
-        });
-    }, [practitioners]);
+        fetchSpecialists();
+    }, []);
 
     const filteredSpecialists = filter === 'all'
         ? mappedPractitioners
         : mappedPractitioners.filter((s) => s.type === filter);
+
+    if (loading) {
+        return <div className="text-center py-20">Loading specialists...</div>;
+    }
 
     return (
         <main className="min-h-screen bg-background pb-20">
@@ -144,27 +99,11 @@ export default function ConsultationPage() {
                     </Button>
                 </div>
 
-                {loading && (
-                    <div className="text-center text-slate-500 py-12">Loading practitioners...</div>
-                )}
-
-                {!loading && error && (
-                    <div className="text-center text-red-500 py-12">{error}</div>
-                )}
-
-                {!loading && !error && filteredSpecialists.length === 0 && (
-                    <div className="text-center text-slate-500 py-12">
-                        No practitioners found.
-                    </div>
-                )}
-
-                {!loading && !error && filteredSpecialists.length > 0 && (
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {filteredSpecialists.map((specialist) => (
-                            <SpecialistCard key={specialist.id} {...specialist} />
-                        ))}
-                    </div>
-                )}
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {filteredSpecialists.map((specialist) => (
+                        <SpecialistCard key={specialist.id} {...specialist} />
+                    ))}
+                </div>
             </div>
         </main>
     );

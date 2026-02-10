@@ -1,7 +1,7 @@
 import { ShieldCheck, Video, Calendar, Clock, Lock, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export default function BookingSummary({ doctor, selectedDate, selectedTime, cost }) {
+export default function BookingSummary({ doctor, selectedDate, selectedTime, cost, mode = "Online", onBook }) {
     return (
         <div className="bg-card rounded-3xl p-6 border border-border hover:border-primary shadow-xl shadow-background/50 transition-all sticky top-24">
             <h2 className="text-xl font-bold text-foreground mb-6">Booking Summary</h2>
@@ -35,9 +35,13 @@ export default function BookingSummary({ doctor, selectedDate, selectedTime, cos
                     <span className="font-bold text-foreground">{selectedTime || "Select a time"}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground font-medium">Session Type</span>
-                    <div className="flex items-center font-bold text-foreground">
-                        <Video className="w-4 h-4 mr-2 text-primary" /> Video Call
+                    <span className="text-slate-500 font-medium">Session Type</span>
+                    <div className="flex items-center font-bold text-slate-900">
+                        {mode === 'Online' ? (
+                            <><Video className="w-4 h-4 mr-2 text-veri5-teal" /> Video Call</>
+                        ) : (
+                            <><ShieldCheck className="w-4 h-4 mr-2 text-veri5-teal" /> Physical Visit</>
+                        )}
                     </div>
                 </div>
             </div>
@@ -52,6 +56,7 @@ export default function BookingSummary({ doctor, selectedDate, selectedTime, cos
             <Button
                 className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-14 rounded-xl shadow-lg shadow-primary/30 mb-4 text-base"
                 disabled={!selectedDate || !selectedTime}
+                onClick={onBook}
             >
                 <Lock className="w-4 h-4 mr-2" /> Book Private Session
             </Button>
