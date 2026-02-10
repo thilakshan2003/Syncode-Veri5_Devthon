@@ -9,8 +9,8 @@ import orderRouter from './routes/orderRouter.js';
 import resourceRoutes from './routes/resourceRoutes.js';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
-import userRoutes from './routes/userRoutes.js';
-import practitionerRouter from './routes/practitionerRouter.js';
+
+
 import appointmentRouter from './routes/appointmentRouter.js';
 import { serializeBigInt } from './utils/serialization.js';
 import fs from 'fs';
