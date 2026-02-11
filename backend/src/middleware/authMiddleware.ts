@@ -31,6 +31,15 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
                 address: true,
                 createdAt: true,
                 updatedAt: true,
+                clinicStaff: {
+                    include: {
+                        clinic: {
+                            select: {
+                                slug: true
+                            }
+                        }
+                    }
+                }
             }
         });
 

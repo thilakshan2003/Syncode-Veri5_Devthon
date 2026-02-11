@@ -72,5 +72,42 @@ export const logout = (req: Request, res: Response) => {
 
 export const me = (req: Request, res: Response) => {
     // @ts-ignore - user attached by authMiddleware
-    res.status(200).json({ user: req.user });
+    const user = req.user;
+
+    if (!user) {
+        return res.status(401).json({ error: 'User not found' });
+    }
+
+    const staffMember = user.clinicStaff?.[0];
+
+    // Helper to serialize BigInt
+    const serializeBigInt = (obj: any) => {
+        return JSON.parse(JSON.stringify(obj, (key, value) =>
+            typeof value === 'bigint'
+                ? value.toString()
+                : value
+        ));
+    };
+
+    const profile = {
+        id: user.id.toString(),
+        username: user.username,
+        email: user.email,
+        status: user.status,
+        gender: user.gender,
+        ageRange: user.ageRange,
+        address: user.address,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        ...(staffMember && {
+            clinicSlug: staffMember.clinic?.slug,
+            staffInfo: {
+                clinicId: staffMember.clinicId?.toString(),
+                clinicSlug: staffMember.clinic?.slug,
+                role: staffMember.role
+            }
+        })
+    };
+
+    res.status(200).json({ user: serializeBigInt(profile) });
 };

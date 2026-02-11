@@ -1,4 +1,3 @@
-import { getDashboardData, updateTestStatus } from "./actions";
 import {
     Activity,
     CheckCircle2,
@@ -12,10 +11,41 @@ import {
     RefreshCw
 } from "lucide-react";
 import SubmissionTable from "./SubmissionTable";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+
+async function getDashboardData(slug) {
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get("accessToken")?.value;
+
+    if (!accessToken) return null;
+
+    try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clinics/${slug}/staff-dashboard`, {
+            headers: {
+                Cookie: `accessToken=${accessToken}`
+            },
+            cache: 'no-store'
+        });
+
+        if (!res.ok) {
+            throw new Error(`Failed to fetch data: ${res.status}`);
+        }
+
+        return res.json();
+    } catch (error) {
+        console.error("Dashboard fetch error:", error);
+        return null;
+    }
+}
 
 export default async function ClinicalDashboard({ params }) {
     const { slug } = await params;
     const data = await getDashboardData(slug);
+
+    if (!data) {
+        redirect("/staff/login");
+    }
 
     return (
         <div className="min-h-screen bg-[#0F172A] text-slate-200 font-sans">

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ShieldCheck, Lock, User, Loader2, Sparkles } from "lucide-react";
+import api from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 export default function StaffLogin() {
     const [username, setUsername] = useState("");
@@ -11,6 +12,7 @@ export default function StaffLogin() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const { updateUser } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -18,26 +20,22 @@ export default function StaffLogin() {
         setError("");
 
         try {
-            const result = await signIn("credentials", {
-                username,
-                password,
-                redirect: false,
+            const res = await api.post('/api/auth/login', {
+                identifier: username,
+                password
             });
 
-            if (result?.error) {
-                setError("Invalid credentials or unauthorized access.");
+            const user = res.data.user;
+
+            if (user?.staffInfo?.clinicSlug) {
+                updateUser(user);
+                router.push(`/staff/${user.staffInfo.clinicSlug}`);
             } else {
-                // Fetch the session to get the clinicSlug
-                const res = await fetch("/api/auth/session");
-                const session = await res.json();
-                if (session?.user?.clinicSlug) {
-                    router.push(`/staff/${session.user.clinicSlug}`);
-                } else {
-                    setError("Failed to resolve clinic information.");
-                }
+                setError("Authorized staff access only.");
             }
         } catch (err) {
-            setError("Something went wrong. Please try again.");
+            console.error("Login error:", err);
+            setError(err.response?.data?.error || "Invalid credentials or unauthorized access.");
         } finally {
             setLoading(false);
         }
