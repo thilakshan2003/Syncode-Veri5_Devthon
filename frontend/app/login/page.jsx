@@ -55,7 +55,8 @@ export default function LoginPage() {
 
     const initializeGoogle = () => {
         if (!window.google) {
-            console.error('❌ [Google Init] window.google not available');
+            console.error('❌ [Google Init] window.google not available - Likely blocked by AdBlocker');
+            setError("Google Sign-In blocked. Please disable AdBlocker/Shields for this site.");
             return;
         }
 
@@ -71,6 +72,9 @@ export default function LoginPage() {
             // Render the button component
             const buttonDiv = document.getElementById("google-signin-button");
             if (buttonDiv) {
+                // Clear any existing content
+                buttonDiv.innerHTML = '';
+
                 window.google.accounts.id.renderButton(buttonDiv, {
                     theme: "outline",
                     size: "large",
@@ -78,22 +82,40 @@ export default function LoginPage() {
                     shape: "pill",
                     text: "continue_with",
                     logo_alignment: "left",
-                    width: 1000 // Force wide width to fill container which is constrained by CSS
+                    width: 1000,
+                    height: 50 // Explicit height to ensure coverage
                 });
             }
 
             console.log('✅ [Google Init] Initialized successfully. If the One Tap UI does not appear, check your "Authorized JavaScript origins" in Google Cloud Console.');
         } catch (error) {
             console.error('❌ [Google Init] Initialization failed:', error);
+            setError("Google Sign-In failed to initialize.");
         }
     };
 
     // Ensure Google script is initialized if already loaded
     useEffect(() => {
-        if (window.google && !mounted) {
+        // Check immediately
+        if (window.google) {
             initializeGoogle();
         }
-    }, [mounted]);
+
+        // Also set up a poller just in case script loads after mount but onLoad doesn't fire (rare edge case with Next.js navigation)
+        const timer = setInterval(() => {
+            if (window.google) {
+                // We blindly call initializeGoogle which is safe/idempotent enough usually, 
+                // but checking if button is empty might be better. 
+                // However, initializeGoogle clears innerHTML so it's fine.
+                const btn = document.getElementById("google-signin-button");
+                if (btn && btn.children.length === 0) {
+                    initializeGoogle();
+                }
+            }
+        }, 500);
+
+        return () => clearInterval(timer);
+    }, []);
 
     if (!mounted) return null;
 
@@ -219,10 +241,13 @@ export default function LoginPage() {
                     </button>
 
                     {/* Official Google Button (Invisible Overlay) */}
-                    <div
-                        id="google-signin-button"
-                        className="absolute inset-0 z-20 opacity-0 w-full h-full overflow-hidden"
-                    ></div>
+                    <div className="absolute inset-0 z-20 w-full h-full opacity-0 overflow-hidden">
+                        <div
+                            id="google-signin-button"
+                            className="w-full h-full flex items-center justify-center transform scale-150"
+                            style={{ height: '100%' }}
+                        ></div>
+                    </div>
                 </div>
             </div>
 
