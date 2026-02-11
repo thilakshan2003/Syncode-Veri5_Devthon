@@ -177,7 +177,7 @@ export default function ResultUploadModal({ open, onOpenChange }) {
 
             // Extract image metadata if file is uploaded
             let imageMetadata = null;
-            let aiConfidence = 0.5; // Default low confidence
+            let aiConfidence = 0.85; // Default confidence (will be updated by AI validation if image is provided)
             
             if (selectedFile) {
                 imageMetadata = {
@@ -198,11 +198,8 @@ export default function ResultUploadModal({ open, onOpenChange }) {
                     setIsSubmitting(false);
                     return;
                 }
-            } else {
-                setSubmitError("Please upload a test result image");
-                setIsSubmitting(false);
-                return;
             }
+            // Image upload is optional - allow submission without image
 
             const requestData = {
                 serial: data.veri5Id,
@@ -212,7 +209,13 @@ export default function ResultUploadModal({ open, onOpenChange }) {
                 imageMetadata: imageMetadata,
             };
 
-            console.log("Request data being sent:", requestData);
+            console.log("=== Request Data Debug ===");
+            console.log("Full Request:", requestData);
+            console.log("Serial:", requestData.serial, "Type:", typeof requestData.serial);
+            console.log("AI Confidence:", requestData.aiConfidence, "Type:", typeof requestData.aiConfidence);
+            console.log("Test Type ID:", requestData.testTypeId, "Type:", typeof requestData.testTypeId);
+            console.log("Test Result:", requestData.testResult, "Type:", typeof requestData.testResult);
+            console.log("Image Metadata:", requestData.imageMetadata);
 
             // Call verification API
             const result = await verificationApi.verifyTestKit(requestData);
@@ -231,10 +234,12 @@ export default function ResultUploadModal({ open, onOpenChange }) {
                 window.location.reload();
             }
         } catch (error) {
-            console.error('Verification error:', error);
+            console.error('=== Verification Error ===');
+            console.error('Full error:', error);
             console.error('Error response:', error.response);
             console.error('Error response data:', error.response?.data);
             console.error('Error response status:', error.response?.status);
+            console.error('Error message:', error.message);
             
             // Extract error message from response
             const errorMessage = error.response?.data?.error || error.message || 'Failed to verify test result';
@@ -247,8 +252,8 @@ export default function ResultUploadModal({ open, onOpenChange }) {
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[900px] p-0 overflow-hidden bg-white dark:bg-slate-900 gap-0 rounded-3xl border-2 border-primary/30 shadow-lg">
-                <div className="flex flex-col md:flex-row h-full">
+            <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-hidden p-0 bg-white dark:bg-slate-900 gap-0 rounded-3xl border-2 border-primary/30 shadow-lg">
+                <div className="flex flex-col md:flex-row h-full max-h-[90vh]">
 
                     {/* Left/Top: Image Preview or Illustration */}
                     <div className="relative bg-gradient-to-br from-primary/20 via-primary/15 to-primary/10 p-8 flex flex-col justify-center items-center gap-6 md:w-5/12 border-r border-primary/20 overflow-hidden">
@@ -289,7 +294,7 @@ export default function ResultUploadModal({ open, onOpenChange }) {
                     </div>
 
                     {/* Right/Bottom: Form */}
-                    <div className="p-8 md:p-10 md:w-7/12 relative">
+                    <div className="p-8 md:p-10 md:w-7/12 relative overflow-y-auto max-h-[90vh]">
                         {/* Header with icon */}
                         <DialogHeader className="mb-8 text-left">
                             <div className="flex items-center gap-3 mb-2">
@@ -354,6 +359,7 @@ export default function ResultUploadModal({ open, onOpenChange }) {
                                             <option value="">Loading test types...</option>
                                         ) : (
                                             <>
+                                                <option value="">Select a test type</option>
                                                 {testTypes.map((testType) => (
                                                     <option key={testType.id} value={testType.id}>
                                                         {testType.name}

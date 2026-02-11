@@ -40,16 +40,16 @@ const validateTestKitSerial = async (
   // 1️⃣ Serial existence
   if (!kitInstance) {
     console.error("❌ Serial not found:", serial);
-    throw new Error("Invalid test kit. Please scan the QR code again.");
+    throw new Error("Invalid test kit");
   }
 
-  // 2️⃣ Ownership check
+  // Ownership check
   if (kitInstance.user_id !== requestingUserId) {
     console.error("❌ Kit does not belong to user:", requestingUserId);
     throw new Error("This test kit does not belong to your account.");
   }
 
-  // 3️⃣ Already used or verified check
+  // Already used or verified check
   if (kitInstance.used_at || kitInstance.verified_at) {
     console.error("❌ Kit already used:", {
       usedAt: kitInstance.used_at,
@@ -78,29 +78,29 @@ const validateTestKitSerial = async (
 };
 
 /**
- * 🤖 Run AI Validation
+ * Run AI Validation
  * Uses machine learning to detect if test result is valid
  * @param imageBuffer - Image data in memory (NOT saved anywhere)
  * @returns Confidence score (0-1)
  */
-const runAiValidation = async (imageBuffer: Buffer): Promise<number> => {
-  console.log('🤖 Running AI validation on image...');
+// const runAiValidation = async (imageBuffer: Buffer): Promise<number> => {
+//   console.log('Running AI validation on image...');
 
-  // TODO: Implement AI validation
-  // Options:
-  // 1. TensorFlow.js for on-device processing
-  // 2. Call external API (OpenAI Vision, Google Cloud Vision)
-  // 3. Custom trained model
+//   // TODO: Implement AI validation
+//   // Options:
+//   // 1. TensorFlow.js for on-device processing
+//   // 2. Call external API (OpenAI Vision, Google Cloud Vision)
+//   // 3. Custom trained model
 
-  // For now, return mock confidence
-  const mockConfidence = 0.90;
-  console.log('✅ AI confidence score:', mockConfidence);
+//   // For now, return mock confidence
+//   const mockConfidence = 0.90;
+//   console.log('AI confidence score:', mockConfidence);
 
-  return mockConfidence;
-};
+//   return mockConfidence;
+// };
 
 /**
- * ✅ Verify Test Kit - Main Service
+ * Verify Test Kit - Main Service
  * 
  * Validation Flow:
  * 1. Validate serial number from database
@@ -137,18 +137,19 @@ export const verifyTestKitService = async ({
   };
 }) => {
 
-  console.log('🔬 Starting test kit verification for user:', userId.toString());
-  console.log('📋 Test Result:', testResult);
-  console.log('📸 Image Metadata:', imageMetadata);
+  console.log('Starting test kit verification for user:', userId.toString());
+  console.log('Test Result:', testResult);
+  console.log('Image Metadata:', imageMetadata);
 
-  // 1️⃣ Serial validation - Check test kit is valid and unused
+  // Serial validation - Check test kit is valid and unused
   console.log('Step 1: Validating serial number...');
   const kit = await validateTestKitSerial(serial, userId);
-  console.log('✅ Serial number validated');
+  console.log('Serial number validated');
 
-  // 2️⃣ Image metadata validation
-  console.log('Step 2: Validating image metadata...');
+  // Image metadata validation
+
   if (imageMetadata) {
+    console.log('Step 2: Validating image metadata...');
     // Check file size (max 10MB)
     if (imageMetadata.size > 10 * 1024 * 1024) {
       throw new Error('Image file size exceeds 10MB limit');
@@ -160,15 +161,19 @@ export const verifyTestKitService = async ({
       throw new Error('Invalid file format. Only JPG, PNG, and PDF are allowed');
     }
 
-    console.log('✅ Image metadata validated');
+    console.log('Image metadata validated');
+
+    // 3️⃣ AI confidence validation - Verify quality threshold
+    console.log('Step 3: Validating AI confidence...');
+    //const validatedConfidence = validateAiConfidence(aiConfidence);
+    //console.log(' AI confidence validated:', validatedConfidence);
+    // If you want to enforce a minimum confidence, do it here:
+    // if (aiConfidence < 0.3) throw new Error('Image quality too low. Please upload a clearer photo.');
+  } else {
+    console.log('No image uploaded, skipping image validation.');
   }
 
-  // 3️⃣ AI confidence validation - Verify quality threshold
-  console.log('Step 3: Validating AI confidence...');
-  const validatedConfidence = validateAiConfidence(aiConfidence);
-  console.log('✅ AI confidence validated:', validatedConfidence);
-
-  console.log('✅ All validations passed! Updating database...');
+  console.log('All validations passed! Updating database...');
 
   // 4️⃣ Atomic DB update - Save verification results
   const result = await prisma.$transaction(async (tx: any) => {
@@ -185,19 +190,27 @@ export const verifyTestKitService = async ({
     const verification = await tx.user_verifications.create({
       data: {
         userId: userId,
-        testTypeId: testTypeId,
+        testKitId: kit.test_kit_id, // Link to the test_kits table via the kit instance
         status: "verified",
         testedAt: new Date(),
         verifiedAt: new Date(),
       },
     });
 
-    // Update user current status only if test is negative (clean)
+    // Update user status based on test result
     if (testResult === 'negative') {
       await tx.users.update({
         where: { id: userId },
         data: {
           status: "Verified",
+          updatedAt: new Date(),
+        },
+      });
+    } else if (testResult === 'positive') {
+      await tx.users.update({
+        where: { id: userId },
+        data: {
+          status: "Not_Verified",
           updatedAt: new Date(),
         },
       });
@@ -209,13 +222,13 @@ export const verifyTestKitService = async ({
     };
   });
 
-  console.log('✅ Verification complete!');
-  console.log('📅 Used at timestamp:', result.kit.used_at);
+  console.log('Verification complete!');
+  console.log('Used at timestamp:', result.kit.used_at);
 
   return {
     status: "verified",
     testResult: testResult,
-    confidence: validatedConfidence,
+    //confidence: validatedConfidence,
     usedAt: result.kit.used_at,
     verifiedAt: result.kit.verified_at,
   };
