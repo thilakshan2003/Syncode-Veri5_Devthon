@@ -287,19 +287,24 @@ export const getUserAppointments = async (userId: string) => {
     });
 
     // Format appointments for frontend
-    const formattedAppointments = appointments.map(appointment => ({
-      id: appointment.id.toString(),
-      status: appointment.status,
-      practitionerName: appointment.slot?.practitioner?.name || appointment.slot?.practitioner?.user?.username || 'Unknown',
-      specialization: appointment.slot?.practitioner?.specialization || '',
-      clinicName: appointment.slot?.clinic?.name || 'Not specified',
-      clinicAddress: appointment.slot?.clinic?.address || '',
-      mode: appointment.slot?.mode || 'physical',
-      appointmentDate: appointment.slot?.startsAt || null,
-      appointmentEndTime: appointment.slot?.endsAt || null,
-      priceCents: appointment.slot?.priceCents || 0,
-      createdAt: appointment.createdAt
-    }));
+    const formattedAppointments = appointments.map(appointment => {
+      let name = appointment.slot?.practitioner?.name || appointment.slot?.practitioner?.user?.username || 'Unknown';
+      // Remove leading 'Dr.' or 'dr.' if present
+      name = name.replace(/^dr\.\s*/i, '').trim();
+      return {
+        id: appointment.id.toString(),
+        status: appointment.status,
+        practitionerName: name,
+        specialization: appointment.slot?.practitioner?.specialization || '',
+        clinicName: appointment.slot?.clinic?.name || 'Not specified',
+        clinicAddress: appointment.slot?.clinic?.address || '',
+        mode: appointment.slot?.mode || 'physical',
+        appointmentDate: appointment.slot?.startsAt || null,
+        appointmentEndTime: appointment.slot?.endsAt || null,
+        priceCents: appointment.slot?.priceCents || 0,
+        createdAt: appointment.createdAt
+      };
+    });
 
     return formattedAppointments;
   } catch (error) {
