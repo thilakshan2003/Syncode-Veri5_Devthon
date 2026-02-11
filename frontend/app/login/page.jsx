@@ -54,27 +54,46 @@ export default function LoginPage() {
     };
 
     const initializeGoogle = () => {
-        console.log('🔵 [Google Init] Client ID from env:', process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
-        console.log('🔵 [Google Init] window.google available:', !!window.google);
+        if (!window.google) {
+            console.error('❌ [Google Init] window.google not available');
+            return;
+        }
 
-        if (window.google) {
+        try {
             window.google.accounts.id.initialize({
                 client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
                 callback: handleGoogleResponse,
+                auto_select: false,
+                cancel_on_tap_outside: true,
+                context: 'signin',
             });
-            console.log('✅ [Google Init] Initialized successfully');
-        } else {
-            console.error('❌ [Google Init] window.google not available');
+
+            // Render the button component
+            const buttonDiv = document.getElementById("google-signin-button");
+            if (buttonDiv) {
+                window.google.accounts.id.renderButton(buttonDiv, {
+                    theme: "outline",
+                    size: "large",
+                    type: "standard",
+                    shape: "pill",
+                    text: "continue_with",
+                    logo_alignment: "left",
+                    width: 1000 // Force wide width to fill container which is constrained by CSS
+                });
+            }
+
+            console.log('✅ [Google Init] Initialized successfully. If the One Tap UI does not appear, check your "Authorized JavaScript origins" in Google Cloud Console.');
+        } catch (error) {
+            console.error('❌ [Google Init] Initialization failed:', error);
         }
     };
 
-    const triggerGoogleLogin = () => {
-        if (window.google) {
-            window.google.accounts.id.prompt(); // Show one tap
-            // Or render the invisible button to trigger the selector
-            // For simplicity, we'll use prompt() or we could render a hidden button and click it
+    // Ensure Google script is initialized if already loaded
+    useEffect(() => {
+        if (window.google && !mounted) {
+            initializeGoogle();
         }
-    };
+    }, [mounted]);
 
     if (!mounted) return null;
 
@@ -167,15 +186,16 @@ export default function LoginPage() {
                 </form>
 
                 {/* Google Auth - Expanded Option */}
-                <div className="mt-8 pt-6 border-t border-gray-100 dark:border-slate-800">
+                <div className="mt-8 pt-6 border-t border-gray-100 dark:border-slate-800 relative">
                     <Script
                         src="https://accounts.google.com/gsi/client"
                         onLoad={initializeGoogle}
                     />
+
+                    {/* Visual Custom Button */}
                     <button
                         type="button"
-                        onClick={() => triggerGoogleLogin()}
-                        className="w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 active:scale-[0.98] text-gray-700 dark:text-white font-medium py-3.5 rounded-full transition-all flex items-center justify-center gap-3"
+                        className="w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 active:scale-[0.98] text-gray-700 dark:text-white font-medium py-3.5 rounded-full transition-all flex items-center justify-center gap-3 relative z-10 pointer-events-none"
                     >
                         <svg className="w-5 h-5" viewBox="0 0 24 24">
                             <path
@@ -197,7 +217,12 @@ export default function LoginPage() {
                         </svg>
                         Continue with Google
                     </button>
-                    <div id="google-hidden-button" className="hidden"></div>
+
+                    {/* Official Google Button (Invisible Overlay) */}
+                    <div
+                        id="google-signin-button"
+                        className="absolute inset-0 z-20 opacity-0 w-full h-full overflow-hidden"
+                    ></div>
                 </div>
             </div>
 

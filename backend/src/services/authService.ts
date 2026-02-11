@@ -122,10 +122,8 @@ export class AuthService {
     async googleLogin(tokenId: string) {
         try {
             console.log('🔵 [AuthService] Starting Google login verification');
-            console.log('🔵 [AuthService] Client ID:', config.google.clientId);
 
             // Verify the token with Google
-            // If valid, get user info from payload
             const ticket = await client.verifyIdToken({
                 idToken: tokenId,
                 audience: config.google.clientId,
@@ -139,33 +137,74 @@ export class AuthService {
                 throw new Error('Invalid Google token');
             }
 
-            console.log('🔵 [AuthService] User email from Google:', payload.email);
+            const email = payload.email;
+            console.log('🔵 [AuthService] User email from Google:', email);
 
             // Check if user exists in our database
-            let user = await prisma.users.findUnique({ where: { email: payload.email } });
+            // Include clinicStaff relation to check for roles
+            let user = await prisma.users.findUnique({
+                where: { email },
+                include: {
+                    clinicStaff: {
+                        include: {
+                            clinic: true
+                        }
+                    }
+                }
+            });
 
             if (!user) {
                 console.log('🔵 [AuthService] User not found, creating new user');
-                // Create new user from Google profile
-                // Note: We need a unique username. Using part of email + random suffix as fallback
-                const baseUsername = payload.email.split('@')[0];
+                const baseUsername = email.split('@')[0];
+                // Ensure unique username
                 const username = `${baseUsername}_${Math.floor(Math.random() * 10000)}`;
 
                 user = await prisma.users.create({
                     data: {
                         username,
-                        email: payload.email,
-                        passwordHash: 'GOOGLE_AUTH_NO_PASSWORD', // Placeholder password
-                        status: 'Not_Verified', // Cuz the default user status is unverified
+                        email,
+                        passwordHash: 'GOOGLE_AUTH_NO_PASSWORD',
+                        status: 'Not_Verified',
                     },
+                    include: {
+                        clinicStaff: {
+                            include: {
+                                clinic: true
+                            }
+                        }
+                    }
                 });
                 console.log('✅ [AuthService] New user created:', user.email);
             } else {
                 console.log('✅ [AuthService] Existing user found:', user.email);
             }
 
+            // Extract staff info if available
+            const staffMember = user.clinicStaff?.[0];
+            const role = staffMember?.role;
+            const clinicId = staffMember?.clinicId?.toString();
+            const clinicSlug = staffMember?.clinic?.slug;
+
             console.log('🔵 [AuthService] Generating tokens');
-            return generateTokens(user.id);
+            const tokens = generateTokens(user.id, role, clinicId);
+
+            console.info(`✅ [AuthService] User logged in: ${user.username} (${user.email}) - Role: ${role || 'User'}`);
+
+            // Prepare profile info for the frontend session (consistent with login method)
+            const profile = {
+                id: user.id.toString(),
+                username: user.username,
+                email: user.email,
+                staffInfo: staffMember ? {
+                    clinicId,
+                    clinicSlug,
+                    role
+                } : null,
+                clinicSlug // Add to root for easier access
+            };
+
+            return { ...tokens, user: profile };
+
         } catch (error: any) {
             console.error('❌ [AuthService] Google login failed:', error.message);
             throw error;

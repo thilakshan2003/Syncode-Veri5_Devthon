@@ -52,11 +52,14 @@ export const googleCallback = async (req: Request, res: Response) => {
         console.log('🔵 Token ID received, length:', tokenId.length);
         console.log('🔵 Calling authService.googleLogin...');
 
-        const { accessToken, refreshToken } = await authService.googleLogin(tokenId);
+        // Now googleLogin returns { accessToken, refreshToken, user }
+        const { accessToken, refreshToken, user } = await authService.googleLogin(tokenId);
 
         console.log('✅ Google login successful, setting cookies');
         setCookies(res, accessToken, refreshToken);
-        res.status(200).json({ message: 'Google login successful' });
+
+        // Return user and accessToken to frontend for immediate use/redirection
+        res.status(200).json({ message: 'Google login successful', user, accessToken });
     } catch (error: any) {
         console.error('❌ Google login error:', error.message);
         console.error('Error stack:', error.stack);

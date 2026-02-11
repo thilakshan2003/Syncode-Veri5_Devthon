@@ -61,15 +61,29 @@ export default function SignupPage() {
             window.google.accounts.id.initialize({
                 client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
                 callback: handleGoogleResponse,
+                auto_select: false,
+                cancel_on_tap_outside: true,
+                context: 'signup',
             });
+            console.log('✅ [Google Init] Initialized. Check origins if 403 Forbidden.');
         }
     };
 
     const triggerGoogleLogin = () => {
         if (window.google) {
-            window.google.accounts.id.prompt();
+            window.google.accounts.id.prompt((notification) => {
+                if (notification.isNotDisplayed()) {
+                    console.warn('⚠️ [Google Prompt] Issue:', notification.getNotDisplayedReason());
+                }
+            });
         }
     };
+
+    useEffect(() => {
+        if (window.google && !mounted) {
+            initializeGoogle();
+        }
+    }, [mounted]);
 
     if (!mounted) return null;
 
