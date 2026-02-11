@@ -13,27 +13,35 @@ import {
     Check,
     History
 } from "lucide-react";
-import { updateTestStatus } from "./actions";
+import api from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 export default function SubmissionTable({ initialSubmissions }) {
     const [submissions, setSubmissions] = useState(initialSubmissions);
     const [selectedSubmission, setSelectedSubmission] = useState(null);
     const [isUpdating, setIsUpdating] = useState(false);
     const [showModal, setShowModal] = useState(false);
+    const router = useRouter();
 
     const handleUpdate = async (status) => {
         if (!selectedSubmission) return;
         setIsUpdating(true);
         try {
-            const res = await updateTestStatus(selectedSubmission.id, status);
-            if (res.success) {
-                setSubmissions(prev => prev.map(s =>
-                    s.id === selectedSubmission.id ? { ...s, status } : s
-                ));
-                setShowModal(false);
-                setSelectedSubmission(null);
-            }
+            // Use direct API call with axios (cookies included automatically)
+            await api.patch(`/api/verifications/${selectedSubmission.id}/status`, {
+                status
+            });
+
+            // Optimistic update
+            setSubmissions(prev => prev.map(s =>
+                s.id === selectedSubmission.id ? { ...s, status } : s
+            ));
+            setShowModal(false);
+            setSelectedSubmission(null);
+
+            // Refresh server data
+            router.refresh();
         } catch (err) {
             console.error("Update failed:", err);
             alert("Failed to update status. Please try again.");
