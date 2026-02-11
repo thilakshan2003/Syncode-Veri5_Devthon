@@ -2,7 +2,7 @@ name: Build and Deploy to EC2
 
 on:
   push:
-    branches: ["main"]
+    # branches: ["main"]
 
 permissions:
   contents: read
