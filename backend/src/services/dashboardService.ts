@@ -261,7 +261,9 @@ export const getUserAppointments = async (userId: string) => {
         slot: {
           include: {
             practitioner: {
-              include: {
+              select: {
+                name: true,
+                specialization: true,
                 user: {
                   select: {
                     username: true
@@ -288,7 +290,7 @@ export const getUserAppointments = async (userId: string) => {
     const formattedAppointments = appointments.map(appointment => ({
       id: appointment.id.toString(),
       status: appointment.status,
-      practitionerName: appointment.slot?.practitioner?.user?.username || 'Unknown',
+      practitionerName: appointment.slot?.practitioner?.name || appointment.slot?.practitioner?.user?.username || 'Unknown',
       specialization: appointment.slot?.practitioner?.specialization || '',
       clinicName: appointment.slot?.clinic?.name || 'Not specified',
       clinicAddress: appointment.slot?.clinic?.address || '',
