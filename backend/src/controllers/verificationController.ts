@@ -19,8 +19,17 @@ export const verifyTestKit = async (req: Request, res: Response) => {
     // Extract data from request body
     const { serial, aiConfidence, testTypeId, testResult, imageMetadata } = req.body;
 
+    console.log('=== Test Kit Verification Request ===');
+    console.log('User ID:', userId);
+    console.log('Serial:', serial);
+    console.log('AI Confidence:', aiConfidence);
+    console.log('Test Type ID:', testTypeId);
+    console.log('Test Result:', testResult);
+    console.log('Image Metadata:', imageMetadata);
+
     // Validation
     if (!serial || aiConfidence === undefined || !testTypeId || !testResult) {
+      console.error('Missing required fields:', { serial, aiConfidence, testTypeId, testResult });
       return res.status(400).json({
         error: "Missing required fields: serial, aiConfidence, testTypeId, or testResult"
       });
@@ -28,6 +37,7 @@ export const verifyTestKit = async (req: Request, res: Response) => {
 
     // Validate testResult value
     if (!['positive', 'negative'].includes(testResult)) {
+      console.error('Invalid testResult value:', testResult);
       return res.status(400).json({
         error: "Invalid testResult value. Must be 'positive' or 'negative'"
       });
@@ -36,27 +46,41 @@ export const verifyTestKit = async (req: Request, res: Response) => {
     // Convert aiConfidence to number
     const confidence = parseFloat(aiConfidence);
     if (isNaN(confidence)) {
+      console.error('Invalid aiConfidence value:', aiConfidence);
       return res.status(400).json({
         error: "Invalid aiConfidence value"
       });
     }
+
+    // Validate testTypeId
+    const parsedTestTypeId = parseInt(testTypeId);
+    if (isNaN(parsedTestTypeId)) {
+      console.error('Invalid testTypeId value:', testTypeId);
+      return res.status(400).json({
+        error: "Invalid testTypeId value"
+      });
+    }
+
+    console.log('All validations passed, calling service...');
 
     // Call service
     const result = await verifyTestKitService({
       userId,
       serial,
       aiConfidence: confidence,
-      testTypeId: BigInt(testTypeId),
+      testTypeId: BigInt(parsedTestTypeId),
       testResult: testResult as 'positive' | 'negative',
       imageMetadata,
     });
 
+    console.log('Verification successful!');
     res.json({
       success: true,
       ...result
     });
   } catch (err: any) {
     console.error('Verification error:', err);
+    console.error('Error message:', err.message);
     res.status(400).json({ error: err.message });
   }
 };

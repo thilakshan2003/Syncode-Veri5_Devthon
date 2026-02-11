@@ -311,7 +311,7 @@ export const verificationApi = {
      * @returns {Promise} Response with verification result
      */
     verifyTestKit: async (verificationData) => {
-        const response = await api.post('/api/verification/kit', verificationData);
+        const response = await api.post('/api/verifications/kit', verificationData);
         return response.data;
     }
 };
