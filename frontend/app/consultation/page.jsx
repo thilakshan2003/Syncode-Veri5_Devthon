@@ -18,6 +18,7 @@ export default function ConsultationPage() {
 }
 
 function ConsultationContent() {
+    const apiBase = process.env.NEXT_PUBLIC_API_URL;
     const searchParams = useSearchParams();
     const clinicId = searchParams.get('clinicId') ?? '';
     const [selectedClinicId, setSelectedClinicId] = useState(clinicId);
@@ -32,8 +33,8 @@ function ConsultationContent() {
         const fetchFilters = async () => {
             try {
                 const [clinicsRes, specsRes] = await Promise.all([
-                    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/clinics`),
-                    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/practitioners/specializations`)
+                    fetch(`${apiBase}/api/clinics`),
+                    fetch(`${apiBase}/api/practitioners/specializations`)
                 ]);
                 const clinicsData = await clinicsRes.json();
                 const specsData = await specsRes.json();
@@ -55,7 +56,7 @@ function ConsultationContent() {
                 if (filterRole !== 'all') params.append('role', filterRole);
                 if (filterAvailability !== 'all') params.append('availability', filterAvailability);
 
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/practitioners?${params.toString()}`);
+                const response = await fetch(`${apiBase}/api/practitioners?${params.toString()}`);
                 const data = await response.json();
                 console.log("Fetched practitioners:", data);
 

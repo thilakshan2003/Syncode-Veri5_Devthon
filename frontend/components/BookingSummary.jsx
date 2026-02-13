@@ -61,7 +61,9 @@ export default function BookingSummary({ doctor, selectedDate, selectedTime, cos
             {/* Cost Area */}
             <div className="bg-primary/10 rounded-2xl p-6 flex items-center justify-between mb-8">
                 <span className="font-bold text-foreground">Session Cost</span>
-                <span className="font-extrabold text-2xl text-foreground">Rs. {cost}</span>
+                <span className="font-extrabold text-2xl text-foreground">
+                    {cost === 0 || cost === "0.00" || cost === "0" ? "Free" : `Rs. ${cost}`}
+                </span>
             </div>
 
             {/* Action Buttons */}

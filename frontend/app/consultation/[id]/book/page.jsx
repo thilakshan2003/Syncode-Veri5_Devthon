@@ -16,6 +16,7 @@ export default function BookingPage(props) {
     const params = use(props.params);
     const router = useRouter();
     const { user } = useAuth();
+    const apiBase = process.env.NEXT_PUBLIC_API_URL;
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedTime, setSelectedTime] = useState(null);
     const [mode, setMode] = useState("online"); // Changed to lowercase to match database
@@ -40,7 +41,7 @@ export default function BookingPage(props) {
     useEffect(() => {
         const fetchDoctor = async () => {
             try {
-                const response = await fetch(`http://localhost:5000/api/practitioners/${params.id}`);
+                const response = await fetch(`${apiBase}/api/practitioners/${params.id}`);
                 if (!response.ok) throw new Error('Failed to fetch doctor details');
                 const data = await response.json();
 
@@ -112,6 +113,7 @@ export default function BookingPage(props) {
                                 onTimeSelect={setSelectedTime}
                                 availableSlots={doctor.appointmentSlots}
                                 mode={mode}
+                                doctorId={doctor.id}
                             />
                         </div>
 
@@ -122,12 +124,18 @@ export default function BookingPage(props) {
                                 selectedDate={selectedDate}
                                 selectedTime={selectedTime}
                                 mode={mode}
-                                cost={selectedTime ? doctor.appointmentSlots.find(s => {
-                                    const d = new Date(s.startsAt);
-                                    const dateStr = toDateKey(d);
-                                    const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                                    return dateStr === selectedDate && timeStr === selectedTime && s.mode === mode;
-                                })?.priceCents / 100 : "—"}
+                                cost={(() => {
+                                    if (!doctor.appointmentSlots || doctor.appointmentSlots.length === 0) return "—";
+                                    if (!selectedDate || !selectedTime) return "—";
+                                    const slot = doctor.appointmentSlots.find(s => {
+                                        const d = new Date(s.startsAt);
+                                        const dateStr = toDateKey(d);
+                                        const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                                        return dateStr === selectedDate && timeStr === selectedTime && s.mode && s.mode.toLowerCase() === mode.toLowerCase();
+                                    });
+                                    if (!slot || typeof slot.priceCents !== 'number' || isNaN(slot.priceCents)) return "—";
+                                    return Number.isFinite(slot.priceCents) ? (slot.priceCents / 100).toLocaleString('en-US', { minimumFractionDigits: 2 }) : "—";
+                                })()}
                                 onBook={async () => {
                                     if (!user) {
                                         router.push('/login');
@@ -138,7 +146,7 @@ export default function BookingPage(props) {
                                         const d = new Date(s.startsAt);
                                         const dateStr = toDateKey(d);
                                         const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                                        return dateStr === selectedDate && timeStr === selectedTime && s.mode === mode.toLowerCase();
+                                        return dateStr === selectedDate && timeStr === selectedTime && s.mode && s.mode.toLowerCase() === mode.toLowerCase();
                                     });
 
                                     if (!slot) {

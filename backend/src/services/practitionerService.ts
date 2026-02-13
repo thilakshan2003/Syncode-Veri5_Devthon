@@ -26,28 +26,29 @@ export const getAllPractitioners = async (filters: PractitionerFilters = {}) => 
             }
         };
     }
+    // Step 1: Fetch practitioners only
     const practitioners = await prisma.practitioners.findMany({
         where: where,
-        include: {
-            user: true,
-            appointmentSlots: {
-                where: {
-                    startsAt: {
-                        gte: new Date(), // Only future slots interact with availability
-                    },
-                },
-                include: {
-                    clinic: true
-                }
-            },
-        },
+        include: { user: true },
     });
 
-    let filteredPractitioners = practitioners;
+    // Step 2: For each practitioner, fetch their available slots
+    const practitionersWithSlots = await Promise.all(practitioners.map(async (p) => {
+        const slots = await prisma.appointment_slots.findMany({
+            where: {
+                practitionerId: p.id,
+                startsAt: { gte: new Date() },
+            },
+            include: { clinic: true },
+        });
+        return { ...p, appointmentSlots: slots };
+    }));
+
+    let filteredPractitioners = practitionersWithSlots;
 
     if (availability) {
         const availLower = availability.toLowerCase();
-        filteredPractitioners = practitioners.filter(p => {
+        filteredPractitioners = practitionersWithSlots.filter(p => {
             const slots = p.appointmentSlots;
             const onlineSlots = slots.filter(s => s.mode === AppointmentSlotMode.online);
             const physicalSlots = slots.filter(s => s.mode === AppointmentSlotMode.physical);
@@ -59,14 +60,14 @@ export const getAllPractitioners = async (filters: PractitionerFilters = {}) => 
             if (availLower.includes('weekends')) {
                 // Check if has weekend slots (online or physical)
                 return slots.some(s => {
-                    const day = s.startsAt.getDay();
+                    const day = new Date(s.startsAt).getDay();
                     return day === 0 || day === 6;
                 });
             }
             if (availLower.includes('weekdays')) {
                 // Check if has weekday slots (online or physical)
                 return slots.some(s => {
-                    const day = s.startsAt.getDay();
+                    const day = new Date(s.startsAt).getDay();
                     return day !== 0 && day !== 6;
                 });
             }
@@ -83,12 +84,12 @@ export const getAllPractitioners = async (filters: PractitionerFilters = {}) => 
         const freeSlots = slots.filter(s => s.priceCents === 0);
 
         const hasWeekendOnline = onlineSlots.some(s => {
-            const day = s.startsAt.getDay();
+            const day = new Date(s.startsAt).getDay();
             return day === 0 || day === 6;
         });
 
         const hasWeekdayOnline = onlineSlots.some(s => {
-            const day = s.startsAt.getDay();
+            const day = new Date(s.startsAt).getDay();
             return day !== 0 && day !== 6;
         });
 
@@ -102,12 +103,12 @@ export const getAllPractitioners = async (filters: PractitionerFilters = {}) => 
         }
 
         const hasWeekendPhysical = physicalSlots.some(s => {
-            const day = s.startsAt.getDay();
+            const day = new Date(s.startsAt).getDay();
             return day === 0 || day === 6;
         });
 
         const hasWeekdayPhysical = physicalSlots.some(s => {
-            const day = s.startsAt.getDay();
+            const day = new Date(s.startsAt).getDay();
             return day !== 0 && day !== 6;
         });
 
@@ -121,7 +122,6 @@ export const getAllPractitioners = async (filters: PractitionerFilters = {}) => 
                 tags.add("Free consultations");
             }
         });
-
 
         return {
             ...p,
@@ -182,7 +182,7 @@ export const getPractitionerById = async (id: string | number) => {
             id: slot.id.toString(),
             practitionerId: slot.practitionerId.toString(),
             clinicId: slot.clinicId?.toString(),
-            priceCents: slot.priceCents
+            priceCents: typeof slot.priceCents === 'number' && !isNaN(slot.priceCents) ? slot.priceCents : 0
         }))
     };
 };

@@ -19,10 +19,10 @@ export default function BookingCalendar({ onDateSelect, onTimeSelect, selectedDa
         return `${year}-${month}-${day}`;
     };
 
-    // Filter slots by mode
+    // Filter slots by mode (case-insensitive)
     const filteredSlots = useMemo(() => {
         return availableSlots.filter(slot =>
-            mode === 'Online' ? slot.mode === 'online' : slot.mode === 'physical'
+            slot.mode && slot.mode.toLowerCase() === mode.toLowerCase()
         );
     }, [availableSlots, mode]);
 
