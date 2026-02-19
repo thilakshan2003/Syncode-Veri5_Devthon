@@ -9,7 +9,7 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import api from '@/lib/api';
+import api, { clinicApi } from '@/lib/api';
 
 
 export default function BookingPage(props) {
@@ -21,8 +21,36 @@ export default function BookingPage(props) {
     const [selectedTime, setSelectedTime] = useState(null);
     const [mode, setMode] = useState("online"); // Changed to lowercase to match database
     const [doctor, setDoctor] = useState(null);
+    const [clinicName, setClinicName] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    // Fetch clinic name when slot changes
+    useEffect(() => {
+        const fetchClinicName = async () => {
+            if (!doctor || !selectedDate || !selectedTime) {
+                setClinicName("");
+                return;
+            }
+            // Find the selected slot
+            const slot = doctor.appointmentSlots.find(s => {
+                const d = new Date(s.startsAt);
+                const dateStr = toDateKey(d);
+                const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                return dateStr === selectedDate && timeStr === selectedTime && s.mode && s.mode.toLowerCase() === mode.toLowerCase();
+            });
+            if (slot && slot.clinicId) {
+                try {
+                    const clinic = await clinicApi.getClinicById(slot.clinicId);
+                    setClinicName(clinic.name || "");
+                } catch (e) {
+                    setClinicName("");
+                }
+            } else {
+                setClinicName("");
+            }
+        };
+        fetchClinicName();
+    }, [doctor, selectedDate, selectedTime, mode]);
 
     const toDateKey = (date) => {
         const year = date.getFullYear();
@@ -136,6 +164,7 @@ export default function BookingPage(props) {
                                     if (!slot || typeof slot.priceCents !== 'number' || isNaN(slot.priceCents)) return "—";
                                     return Number.isFinite(slot.priceCents) ? (slot.priceCents / 100).toLocaleString('en-US', { minimumFractionDigits: 2 }) : "—";
                                 })()}
+                                clinicName={clinicName}
                                 onBook={async () => {
                                     if (!user) {
                                         router.push('/login');

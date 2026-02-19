@@ -1,7 +1,7 @@
 import { ShieldCheck, Video, Calendar, Clock, Lock, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export default function BookingSummary({ doctor, selectedDate, selectedTime, cost, mode = "online", onBook, appointmentId, onCancel }) {
+export default function BookingSummary({ doctor, selectedDate, selectedTime, cost, mode = "online", clinicName = "", onBook, appointmentId, onCancel }) {
     const isExistingAppointment = !!appointmentId;
     const formatDate = (dateValue) => {
         if (!dateValue) return "Select a date";
@@ -18,8 +18,8 @@ export default function BookingSummary({ doctor, selectedDate, selectedTime, cos
                 {isExistingAppointment ? "Appointment Details" : "Booking Summary"}
             </h2>
 
-            {/* Doctor Info */}
-            <div className="flex items-center gap-4 mb-8">
+            {/* Doctor & Clinic Info */}
+            <div className="flex items-center gap-4 mb-2">
                 <div className="w-16 h-16 rounded-2xl bg-muted overflow-hidden relative">
                     {/* Image Placeholder */}
                     {doctor.image ? (
@@ -33,6 +33,9 @@ export default function BookingSummary({ doctor, selectedDate, selectedTime, cos
                 <div>
                     <h3 className="font-bold text-foreground">{doctor.name}</h3>
                     <p className="text-primary font-medium text-sm">{doctor.role}</p>
+                    {clinicName && (
+                        <p className="text-muted-foreground text-xs mt-1">Clinic: <span className="font-semibold">{clinicName}</span></p>
+                    )}
                 </div>
             </div>
 

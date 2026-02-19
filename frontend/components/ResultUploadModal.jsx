@@ -121,6 +121,11 @@ export default function ResultUploadModal({ open, onOpenChange }) {
     useEffect(() => {
         if (open) {
             fetchTestTypes();
+        } else {
+            // Reset form, clear file, and clear error when modal closes
+            reset();
+            setSelectedFile(null);
+            setSubmitError(null);
         }
     }, [open]);
 
@@ -441,7 +446,12 @@ export default function ResultUploadModal({ open, onOpenChange }) {
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    onClick={() => onOpenChange(false)}
+                                    onClick={() => {
+                                        reset();
+                                        setSelectedFile(null);
+                                        setSubmitError(null);
+                                        onOpenChange(false);
+                                    }}
                                     disabled={isSubmitting}
                                     className="flex-1 rounded-xl h-13 border-2 border-border text-muted-foreground font-bold hover:bg-muted hover:text-foreground hover:border-border transition-all duration-200"
                                 >
