@@ -76,10 +76,10 @@ export default function ClinicsPage() {
                     <ClinicSearch onSearch={handleSearch} />
                 </div>
 
-                <div className="flex flex-col lg:flex-row gap-8">
+                <div className="flex flex-col lg:flex-row gap-8 items-stretch">
                     {/* Left: List functionality/Sidebar */}
                     <div className="w-full lg:w-1/3 space-y-4">
-                        <div className="space-y-4 h-[calc(100vh-400px)] overflow-y-auto pr-2">
+                        <div className="space-y-4 min-h-[500px] lg:h-[calc(100vh-250px)] overflow-y-auto pr-2">
                             {loading ? (
                                 <div className="flex items-center justify-center py-12">
                                     <Loader2 className="w-8 h-8 animate-spin text-veri5-teal" />
